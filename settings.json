@@ -1,0 +1,16 @@
+{
+	"public": {
+		"appName": "CHASSIS2 test",
+		"staleSessionInactivityTimeout": 1800000,
+		"staleSessionHeartbeatInterval": 180000,
+		"staleSessionPurgeInterval": 60000,
+		"staleSessionActivityEvents": "touchstart touchend mousemove click keydown",
+		"staleSessionForceLogout": true
+	},
+	"private": {
+		"slackAPIURL": "https://hooks.slack.com/services/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",
+  		"AWSAccessKeyId": "AKIAJYJIHIQE4NBGXJOA",
+  		"AWSSecretAccessKey": "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",
+  		"AWSRegion": "ap-northeast-1" 
+	}
+}

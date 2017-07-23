@@ -1,0 +1,263 @@
+/* CSS declarations go here */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+article, aside, details, figcaption, figure,
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+
+html {
+	height: 100%;
+}
+
+body {
+	font-family: 'Roboto', 'Noto Sans TC', sans-serif;
+	height: 100%;
+}
+
+header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: 99;
+}
+
+footer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	z-index: 99;
+}
+
+h1 {
+    display: block;
+    font-size: 2em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+	width: 100%;
+    font-weight: bold;
+}
+
+h2 {
+    display: block;
+    font-size: 1.5em;
+	margin-top: 0.67em;
+    margin-bottom: 0.67em;
+	width: 100%;
+    font-weight: bold;
+}
+
+h3 {
+    display: block;
+    font-size: 1.17em;
+	margin-top: 0.67em;
+    margin-bottom: 0.67em;
+	width: 100%;
+    font-weight: bold;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar{width: 3px;}
+
+::-webkit-scrollbar-thumb{background-color:rgb(173, 173, 173); border-radius: 0;}
+::-webkit-scrollbar-thumb:hover{background-color:rgb(79, 79, 79);}
+
+::-webkit-scrollbar-track{background-color:rgb(237, 237, 237);}
+
+
+/* End Scrollbar */
+
+.main-page {
+	min-height: 100%;
+	width: 100%;
+	padding-top: 4em;
+	padding-bottom: 5em;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	display: flex;
+	flex-flow: column;
+
+}
+
+.row-center {
+	display: flex;
+	width: 100%;
+	flex-flow: row wrap;
+	flex: 0 0 auto;
+	justify-content: center;
+}
+
+.row-left {
+	display: flex;
+	width: 100%;
+	flex-flow: row wrap;
+	flex: 0 0 auto;
+	justify-content: flex-start;
+}
+
+.row-right {
+	display: flex;
+	width: 100%;
+	flex-flow: row wrap;
+	flex: 0 0 auto;
+	justify-content: flex-end;
+}
+
+.widget {
+	min-width: 180px;
+	display: flex;
+	flex: 0 0 auto;
+	align-items: baseline;
+	justify-content: flex-start;
+}
+
+.widget > * {
+	margin: 3px;
+}
+
+.widget-default {
+	align-items: flex-start;
+	flex-flow: column;
+}
+
+.widget-1col {
+	flex-flow: row wrap;
+	width: 100%;
+}
+
+
+.widget-2col {
+	width: 50%;
+	flex-flow: row wrap;
+}
+
+.widget-2col > * {
+	margin: 3px;
+}
+
+.widget-3col {
+	width: 33%;
+	flex-flow: row wrap;
+}
+
+.widget-3col > * {
+	margin: 3px;
+}
+
+.widget-3col2 {
+	width: 67%;
+	flex-flow: row wrap;
+}
+
+.widget-3col2 > * {
+	margin: 3px;
+}
+
+.widget-4col1 {
+	width: 25%;
+	flex-flow: row wrap;
+}
+
+.widget-4col1 > * {
+	margin: 3px;
+}
+
+.widget-4col3 {
+	width: 75%;
+	flex-flow: row wrap;;
+}
+
+.widget-4col3 > * {
+	margin: 3px;
+}
+
+.default-iconGrp {
+	flex-direction: row-reverse;
+	align-items: center;
+}
+
+.default-textField {
+	width: 180px !important;
+}
+
+.table-container {
+	flex: 1 1 auto;
+	display: inline-flex;
+}
+
+.datatable_headerRow {
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  width: 100%;
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row wrap;
+          flex-flow: row wrap;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+	justify-content: flex-start;
+}
+.datatable_row {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+
+  -webkit-box-orient: horizontal;
+  -webkit-box-direction: normal;
+      -ms-flex-flow: row wrap;
+          flex-flow: row wrap;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+	justify-content: flex-start;
+}
+
+.inputfile {
+	width: 0.1px;
+	height: 0.1px;
+	opacity: 0;
+	overflow: hidden;
+	position: absolute;
+	z-index: -1;
+}
