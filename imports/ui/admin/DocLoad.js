@@ -1,4 +1,4 @@
-//Basic React/Meteor/mobx import
+//Basic React/Meteor/mobx import 
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session'
