@@ -1,4 +1,4 @@
-//Basic React/Meteor/mobx import 
+//Basic React/Meteor/mobx import
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session'
@@ -48,11 +48,11 @@ let tableHandle;
 let dataTable;
 
 class Store {
-	@observable table = '';
-	@observable mode = 'loading';
+	@observable table = ''; //table name
+	@observable mode = 'loading'; //view, edit or new
 	@observable docId = '';
 
-	@observable lookupList = {};
+	@observable lookupList = {}; //store autocomplete lookup list
 	@observable searchText = {};
 
 	@observable fields = []; //{name: n, type: t}
@@ -132,7 +132,7 @@ class Store {
 					onStop: (e) => { console.log(e) }
 				});
 				break;
-			case 'view': //fixme
+			case 'view':
 				this.mode = 'view';
 				this.loadDocHandler = Meteor.subscribe(tableHandle['singleDoc'], d, {
 					onReady: () => this.loadForm(d),
@@ -248,11 +248,8 @@ class Store {
 		this.loadDocHandler.stop();
 	}
 
-	@action updateVal(fieldStore, errStore, fieldType, fieldName, v, arg1, isUpdate) { //arg1 only for datetime now. isUpdate for edit form, not for new/view
+	@action updateVal(fieldStore, errStore, fieldType, fieldName, v, arg1) { //arg1 only for datetime now. isUpdate for edit form, not for new/view
 		errStore[fieldName] = '';
-		if (isUpdate) {
-
-		}
 		switch(fieldType) {
 			case 'date':
 				fieldStore[fieldName] = moment(v);
@@ -269,22 +266,23 @@ class Store {
 					fieldStore[fieldName] = ''
 					errStore[fieldName] = '日期錯誤'
 				}
-				console.log('store.updateVal.datetime', fieldName, fieldStore[fieldName])
 				break;
 			case 'sysID':
 				break; //does not allow change of sysID
 			case 'url':
 				const self=this
-				console.log('store.updateVal.url', v)
 				if (v.type == 'application/pdf') {
-					fieldStore[fieldName] = v;
+					fieldStore[fieldName] = v; //if isPDF then put object into store
 				} else if (v.type == 'image/png' || v.type == 'image/jpg' || v.type == 'image/jpeg' ) {
 					Resizer.resize(v, {width: 1600, height: 1600, cropSquare: false}, function(err, file) {
 						if (err) { errStore[fieldName] = '檔案錯誤' }
-						else { self.updateVal(fieldStore, errStore, 'text', fieldName, v)}
+						else { fieldStore[fieldName] = v } //if isImage then resize then put object into store
 					});
 				}
-				else { errStore[fieldName] = '格式不符' }
+				else {
+					errStore[fieldName] = '格式不符';
+					fieldStore[fieldName] = undefined;
+				} //else add to err but leave store undefined
 				break;
 			case 'text':
 			case 'longText':
@@ -300,7 +298,7 @@ class Store {
 			case 'decimal':
 			case 'currency':
 				if (v == parseFloat(v)) { fieldStore[fieldName] = parseFloat(v) }
-				else if (v === '') { fieldStore[fieldName] = 0} //find a way to fix the input decimal point issue
+				else if (v === '') { fieldStore[fieldName] = 0} //fixme find a way to fix the input decimal point issue
 				break;
 			case 'boolean':
 				fieldStore[fieldName] = v;
@@ -376,7 +374,7 @@ const store = new Store();
 			case 'date':
 				return (
 					<div className="default-textField">
-						<DatePicker key={f.name} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
+						<DatePicker disabled={store.mode=='view'} key={f.name} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
 							value={valStore[f.name].toDate()}
 							onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate)}
 							errorText={errStore[f.name]}
@@ -388,7 +386,7 @@ const store = new Store();
 				return (
 					<div className="widget">
 						<div key={f.name+'_date'} className="default-textField">
-							<DatePicker className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
+							<DatePicker disabled={store.mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
 								value={valStore[f.name].toDate()}
 								onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate, 'date')}
 								errorText={errStore[f.name]}
@@ -396,7 +394,7 @@ const store = new Store();
 							/>
 						</div>
 						<div key={f.name+'_time'} className="default-textField">
-							<TimePicker className="default-textField" format="24hr" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
+							<TimePicker disabled={store.mode=='view'} className="default-textField" format="24hr" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
 								value={valStore[f.name].toDate()}
 								onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate, 'time')}
 								errorText={errStore[f.name]}
@@ -408,7 +406,7 @@ const store = new Store();
 			case 'sysID':
 			case 'text':
 				return (
-					<TextField className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={store.mode=='view'} onChange={(e) => store.updateVal(valStore, errStore, f.type, f.name, e.target.value)} errorText={errStore[f.name]} />
+					<TextField disabled={store.mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={store.mode=='view'} onChange={(e) => store.updateVal(valStore, errStore, f.type, f.name, e.target.value)} errorText={errStore[f.name]} />
 				);
 			case 'url':
 				if (_.isObject(valStore[f.name])) { //File/blob, i.e. user just selected it from local.  In this case we only use url not a
@@ -419,11 +417,17 @@ const store = new Store();
 					a = valStore[f.name].split('/').pop()
 					url = valStore[f.name]
 				}
-				console.log('fieldRender.url', url)
 				const filename = (a.length > 10)? (a.substring(0,9) + "..."): (a)
+				if (store.mode=='view') {
+					return (
+						<RaisedButton name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-search" style={{height: '24px'}} key={f.name+'_view'}/>} label={filename} primary={true}
+							onTouchTap={(e) => window.open(url, "_blank", "location=0,menubar=0,toolbar=0,")}
+						/>
+					)
+				}
 				if ((a=='上傳檔案') || (errStore[f.name].length > 0)) { //if not a file or have error, do not show view button
 					return (
-						<RaisedButton disabled={store.mode=='view'} containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
+						<RaisedButton containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
 							label={ (errStore[f.name] == '')? (filename): (errStore[f.name]) }
 							primary={(errStore[f.name] == '')}
 							onChange={ (e) => { store.updateVal(valStore, errStore, f.type, f.name, e.target.files[0])}}
@@ -435,7 +439,7 @@ const store = new Store();
 				else {
 					return (
 						<div className="widget">
-							<RaisedButton disabled={store.mode=='view'} containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
+							<RaisedButton containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
 								label={ (errStore[f.name] == '')? (filename): (errStore[f.name]) }
 								primary={(errStore[f.name] == '')}
 								onChange={ (e) => { store.updateVal(valStore, errStore, f.type, f.name, e.target.files[0])}}
@@ -472,7 +476,7 @@ const store = new Store();
 			case 'status':
 			case 'autocomplete':
 				return (
-					<AutoComplete className="default-textField" floatingLabelText={tableHandle.schema[tableHandle.view[f.name].key].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
+					<AutoComplete disabled={store.mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[tableHandle.view[f.name].key].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
 						style={comStyle} menuStyle={comStyle} listStyle={comStyle}
 						value={valStore[f.name]}
 						searchText={store.searchText[f.name]}
@@ -490,7 +494,7 @@ const store = new Store();
 				);
 			case 'boolean':
 				return (
-					<Checkbox name={f.name} label={tableHandle.schema[f.name].label} checked={valStore[f.name]} style={comStyle} onCheck={(e, isInputChecked) => store.updateVal(valStore, errStore, f.type, f.name, isInputChecked)}/>
+					<Checkbox disabled={store.mode=='view'} name={f.name} label={tableHandle.schema[f.name].label} checked={valStore[f.name]} style={comStyle} onCheck={(e, isInputChecked) => store.updateVal(valStore, errStore, f.type, f.name, isInputChecked)}/>
 				)
 			default:
 				return 'Error: FIELDVIEW UNKNOWN'
@@ -610,17 +614,24 @@ const store = new Store();
 				subTableValue.forEach((w) => { w[v.name] = w[v.name].toDate() })
 			}
 		})
-		//update all 'url's, upload to S3 and get URL, save to object
+		//2. update all 'url's, upload to S3 and get URL, save to object
+		//http = not updating existing file.  string/undefined = not picking a file, object = picked a file
 		for (let v of store.fields.toJS()) {
 			if (v.type=='url'){
 				try {
-					let u = '';
 					if (typeof fieldsValue[v.name] === undefined) { }
 					else if (typeof fieldsValue[v.name] === 'string') {
-						if (fieldsValue[v.name].startsWith('http')) { u = fieldsValue[v.name] }
+						if (fieldsValue[v.name].startsWith('http')) { }
+						else {
+							this.props.setCommonDialogMsg('錯誤: 未有正確檔案.  檔案需為JPG, PNG, GIF 或 PDF.');
+							this.props.setShowCommonDialog(true);
+							return;
+						}
 					}
-					else { u = await this.uploadPic(fieldsValue[v.name], store.table+'_'+v.name); }
-					store.updateVal(fieldsValue, store.fieldsErr, 'text', v.name, u);
+					else {
+						let u = await this.uploadPic(fieldsValue[v.name], store.table+'_'+v.name);
+						store.updateVal(fieldsValue, store.fieldsErr, 'text', v.name, u);
+					}
 				} catch(err) {console.log(err)}
 			}
 		}
@@ -628,13 +639,20 @@ const store = new Store();
 			if (v.type=='url'){
 				for (w of subTableValue) {
 					try {
-						let u = '';
 						if (typeof w[v.name]=== 'undefined') {}
 						else if (typeof w[v.name] === 'string') {
-							if (w[v.name].startsWith('http')) { u = w[v.name] }
+							if (w[v.name].startsWith('http')) { }
+							else {
+								this.props.setCommonDialogMsg('錯誤: 未有正確檔案.  檔案需為JPG, PNG, GIF 或 PDF.');
+								this.props.setShowCommonDialog(true);
+								return;
+							}
 						}
-						else { u = await this.uploadPic(w[v.name], store.table+'_'+v.name); }
-						store.updateVal(w, store.subTableFieldsErr, 'text', v.name, u);
+						//if it's not string then it's file object, i.e. local file is selected
+						else {
+							let u = await this.uploadPic(w[v.name], store.table+'_'+v.name);
+							store.updateVal(w, store.subTableFieldsErr, 'text', v.name, u);
+						}
 					} catch(err) {console.log(err)}
 				}
 			}
@@ -696,12 +714,16 @@ const store = new Store();
 						<div className="row-left">
 							<h3>Sub table</h3>
 						</div>
-						<div className="widget widget-1col"> {/*create fields in subTable*/}
-							{store.subTableFields.map((v) => this.fieldRenderer(v, store.subTableFieldsValue, store.subTableFieldsErr))}
-						</div>
-						<div className="row-left">
-							<RaisedButton label="新增" primary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => store.handleAddLine()} />
-						</div>
+						{(store.mode!='view') && (
+							<div className="row-left">
+								<div className="widget widget-1col"> {/*create fields in subTable*/}
+									{store.subTableFields.map((v) => this.fieldRenderer(v, store.subTableFieldsValue, store.subTableFieldsErr))}
+								</div>
+								<div className="row-left">
+									<RaisedButton label="新增" primary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => store.handleAddLine()} />
+								</div>
+							</div>
+						)}
 						<div className="widget table-container widget-1col">
 							<Measure bounds onResize={(contentRect) => {
 								store.setRowDimensions(contentRect.bounds.width, contentRect.bounds.height)

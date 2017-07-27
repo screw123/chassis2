@@ -1,5 +1,3 @@
-import React, { Component, PropTypes } from 'react';
-import ReactDOM from 'react-dom';
 import { HTTP } from 'meteor/http';
 import { Meteor } from 'meteor/meteor';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
@@ -28,7 +26,7 @@ export const sendSlackMsg = new ValidatedMethod({
 			}
 			return true;
 		} catch (e) {
-			// Got a network error, time-out or HTTP error in the 400 or 500 range.
+			// Got a network error, time-out or HTTP error in the 400 or 500 range..
 			return false;
 		}
 	}

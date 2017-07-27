@@ -1,4 +1,4 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
 import { HTTP } from 'meteor/http';
 import { Meteor } from 'meteor/meteor';
 import ReactDOM from 'react-dom';
@@ -50,7 +50,7 @@ const commonDialog = new CommonDialog();
 	}
 
 	conponentWillMount() {
-		
+
 	}
 
 	render() {
@@ -111,6 +111,3 @@ class TestButton extends Component {
 		return <RaisedButton label="Test Send" primary={true} onClick={this.props.onClick}/>
 	}
 }
-TestButton.propTypes = {
-	onClick: PropTypes.func.isRequired,
-};
