@@ -271,12 +271,13 @@ class Store {
 				break; //does not allow change of sysID
 			case 'url':
 				const self=this
+				console.log(Object.keys(v));
 				if (v.type == 'application/pdf') {
 					fieldStore[fieldName] = v; //if isPDF then put object into store
 				} else if (v.type == 'image/png' || v.type == 'image/jpg' || v.type == 'image/jpeg' ) {
 					Resizer.resize(v, {width: 1600, height: 1600, cropSquare: false}, function(err, file) {
 						if (err) { errStore[fieldName] = '檔案錯誤' }
-						else { fieldStore[fieldName] = v } //if isImage then resize then put object into store
+						else { self.updateVal(fieldStore, errStore, 'text', fieldName, v) } //if isImage then resize then put object into store
 					});
 				}
 				else {
@@ -602,7 +603,6 @@ const store = new Store();
 			this.props.setShowCommonDialog(true);
 			return;
 		}
-
 		const fieldsValue = Object.assign({},store.fieldsValue)
 		const subTableValue = store.subTableLines.toJS()
 		//1. convert date from moment to Date()
@@ -674,11 +674,12 @@ const store = new Store();
 			newDoc[subTableName] = subTable;
 		}
 		try {
-			if (store.mode=='new') { let a = await tableHandle['new'].callPromise(newDoc) }
+			let a = '';
+			if (store.mode=='new') { a = await tableHandle['new'].callPromise(newDoc) }
 			if (store.mode=='edit') {
 				const docId = newDoc['_id']
 				newDoc['_id'] = undefined
-				let a = await tableHandle['update'].callPromise({filter: {'_id': docId }, args: newDoc})
+				a = await tableHandle['update'].callPromise({filter: {'_id': docId }, args: newDoc})
 			}
 			this.props.setSnackBarMsg('Save successful, return msg: '+ a);
 			this.props.setSnackBarAction({}, '');
@@ -766,7 +767,7 @@ const store = new Store();
 					</div>
 				)}
 				{/*subtable end */}
-				<RaisedButton style={{marginTop: '60px'}} label="儲存" fullWidth={true} secondary={true} icon={<FontIcon className="fa fa-floppy-o" />} onTouchTap={(e) => this.handleSubmit(e)} disabled={store.formSubmitting}/>
+				{(store.mode!='view') && <RaisedButton style={{marginTop: '60px'}} label="儲存" fullWidth={true} secondary={true} icon={<FontIcon className="fa fa-floppy-o" />} onTouchTap={(e) => this.handleSubmit(e)} disabled={store.formSubmitting}/>}
 			</div>
 		)
 

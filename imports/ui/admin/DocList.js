@@ -310,16 +310,46 @@ let sync_DBList = null;
 					anchorOrigin={{horizontal: 'right', vertical: 'top'}}
 					targetOrigin={{horizontal: 'right', vertical: 'top'}}
 				>
-					{editButton && <MenuItem value={1} primaryText="修改" leftIcon={<FontIcon className="fa fa-pencil" />} onTouchTap={(e) => browserHistory.push('/admin/DocLoad/'+ store.table + '/edit/' + row["_id"])} />}
+					{editButton && <MenuItem value={1} primaryText="查看" leftIcon={<FontIcon className="fa fa-search-plus" />} onTouchTap={(e) => browserHistory.push('/admin/DocLoad/'+ store.table + '/view/' + row["_id"])} />}
 
-					{deleteButton && <MenuItem value={2} primaryText="删除fixme" leftIcon={<FontIcon className="fa fa-trash-o" />} onTouchTap={(e) => browserHistory.push('/claims/item/edit/' + row["_id"])} />}
+					{editButton && <MenuItem value={2} primaryText="修改" leftIcon={<FontIcon className="fa fa-pencil" />} onTouchTap={(e) => browserHistory.push('/admin/DocLoad/'+ store.table + '/edit/' + row["_id"])} />}
+
+					{deleteButton && <MenuItem value={3} primaryText="删除" leftIcon={<FontIcon className="fa fa-trash-o" />} onTouchTap={(e) => this.deleteDoc(row)} />}
 				</IconMenu>}
 			</div>
 		)
 	}
 
-	multiSelectFunctionReducer() {
-		console.log('multiSelectFunctionReducer')
+	async deleteDoc(d) {
+		if (Array.isArray(d)) {
+			try {
+				for (let d1 of d) {
+					let a = await tableHandle['delete'].callPromise(d1['_id'])
+					this.props.setSnackBarMsg(a);
+					this.props.setSnackBarAction({}, '');
+					this.props.setShowSnackBar(true);
+				}
+			}
+			catch(err) {
+				this.props.setCommonDialogMsg(err.toString());
+				this.props.setShowCommonDialog(true);
+				store.submitting(false);
+			}
+			store.toggleMultiSelect();
+		}
+		else {
+			try {
+				let a = await tableHandle['delete'].callPromise(d['_id'])
+				this.props.setSnackBarMsg(a);
+				this.props.setSnackBarAction({}, '');
+				this.props.setShowSnackBar(true);
+			}
+			catch(err) {
+				this.props.setCommonDialogMsg(err.toString());
+				this.props.setShowCommonDialog(true);
+				store.submitting(false);
+			}
+		}
 	}
 
 	tableAddFilterWarper(opType, input, field) { store.tableAddFilter(opType, input, field) }
@@ -376,12 +406,18 @@ let sync_DBList = null;
 								</InfiniteLoader>
 							</CardText>
 							<CardActions>
-								<RaisedButton label="多選fixme" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />
-								<RaisedButton label="新增fixme" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => store.toggleMultiSelect()} />
-								<RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => this.handleDownloadCSV(store.DBList)} />
-								<RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={() =>
+
+								<RaisedButton label={"多選"+((store.isMultiSelect)? "("+(store.multiSelected.length)+")": "")} style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />
+
+								{store.isMultiSelect && <RaisedButton label="複數刪除" style={buttonStyle} secondary={true} icon={<FontIcon className="fa fa-trash-o" />} onTouchTap={() => this.deleteDoc(store.multiSelected.toJS())} />}
+
+								{!store.isMultiSelect && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
+
+								{!store.isMultiSelect && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => this.handleDownloadCSV(store.DBList)} />}
+
+								{!store.isMultiSelect && <RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={() =>
 									this.handleDownloadCSVAll()
-								} />
+								} />}
 							</CardActions>
 						</Card>
 					</div>

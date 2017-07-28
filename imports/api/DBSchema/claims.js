@@ -144,7 +144,6 @@ export const updateClaim = new ValidatedMethod({
 	run({filter, args}) {
 		if (Meteor.isServer) {
 			try {
-				console.log('updateClaim', filter, args)
 				const a = Claims.update(filter, {$set: args});
 				return '更新了'+a+'張文件';
 			}
@@ -172,7 +171,8 @@ export const deleteClaim = new ValidatedMethod({
 		if (Meteor.isServer) {
 			try {
 				const a = Claims.remove(args);
-				return a;
+				console.log("claims.delete", a)
+				return '移除了'+a+'張文件';
 			}
 			catch(err) { return err }
 		}
