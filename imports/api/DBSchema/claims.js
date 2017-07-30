@@ -171,10 +171,9 @@ export const deleteClaim = new ValidatedMethod({
 		if (Meteor.isServer) {
 			try {
 				const a = Claims.remove(args);
-				console.log("claims.delete", a)
 				return '移除了'+a+'張文件';
 			}
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('delete-failed', err.message) }
 		}
 	}
 });
@@ -190,7 +189,7 @@ export const downloadClaim = new ValidatedMethod({
 	run({query, filter}) {
 		if (Meteor.isServer) {
 			try { return Claims.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).fetch() }
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('download-failed', err.message) }
 		}
 	}
 });
@@ -206,7 +205,7 @@ export const qtyClaim = new ValidatedMethod({
 	run({query, filter}) {
 		if (Meteor.isServer) {
 			try { return Claims.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
 		}
 	}
 });
@@ -215,10 +214,12 @@ if (Meteor.isServer) {
 	//init autoincrement for doc num
 	try { Claims.insert({_id: 'autoincrement', value: 0}); } catch(err) { }
 
-	publishSpec.forEach((spec) => {
+	publishSpec.forEach((spec) => { //publish all publishSpec
 		Meteor.publish(spec.name, function(args) {
 			if (Object.keys(spec.filter).includes('userId')) { spec.filter['userId'] = this.userId } //Assume if filter contains userId, it must be filter by this.userId.  Change if needed
-			const lim = (args.limit > 65535) ? 65535 : args.limit;
+			let lim = 65535
+			if (args.limit === undefined) { }
+			else { lim = (args.limit > 65535) ? 65535 : args.limit }
 			const f = Object.assign({}, spec.filter, args.filter);
 			return Claims.find(f, { sort: args.sort, limit: lim } );
 		});
@@ -230,7 +231,7 @@ if (Meteor.isServer) {
 		else {
 			const doc = d_cursor.fetch()[0];
 			if (this.userId == doc.userId) { return d_cursor }
-			else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ claims.getClaim', "Owner:"+doc.userId+', requester: '+this.userId) }
+			else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ claims.getClaim, Owner:'+doc.userId+', requester: '+this.userId) }
 		}
 	});
 }

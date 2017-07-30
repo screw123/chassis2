@@ -50,8 +50,11 @@ export const newBusiness = new ValidatedMethod({
 	validate() {},
 	run(args) {
 		if (Meteor.isServer) {
-			try { return Business.insert(args) }
-			catch(err) { return err }
+			try {
+				const a = Business.insert(args);
+				return Business.findOne({_id: a}, {fields: {'code': 1}}).code
+			}
+			catch(err) { throw new Meteor.Error('insert-failed', err.message) }
 		}
 	}
 });
@@ -69,9 +72,9 @@ export const updateBusiness = new ValidatedMethod({
 		if (Meteor.isServer) {
 			try {
 				const a = Business.update(filter, {$set: args});
-				return Business.find(filter, {fields: {code: 1}}).fetch();
+				return '更新了'+a+'張文件';
 			}
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('update-failed', err.message)}
 		}
 	}
 });
@@ -87,8 +90,11 @@ export const deleteBusiness = new ValidatedMethod({
 	validate() {},
 	run(args) {
 		if (Meteor.isServer) {
-			try { return Business.remove(args) }
-			catch(err) { return err }
+			try {
+				const a= Business.remove(args);
+				return '移除了'+a+'張文件';
+			 }
+			catch(err) { throw new Meteor.Error('delete-failed', err.message) }
 		}
 	}
 });
@@ -101,7 +107,7 @@ export const downloadBusiness = new ValidatedMethod({
 	run({query, filter}) {
 		if (Meteor.isServer) {
 			try { return Business.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).fetch() }
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('download-failed', err.message) }
 		}
 	}
 });
@@ -114,7 +120,7 @@ export const qtyBusiness = new ValidatedMethod({
 	run({query, filter}) {
 		if (Meteor.isServer) {
 			try { return Business.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
 		}
 	}
 });
@@ -122,7 +128,9 @@ export const qtyBusiness = new ValidatedMethod({
 if (Meteor.isServer) {
 	publishSpec.forEach((spec) => {
 		Meteor.publish(spec.name, function(args) {
-			const lim = (args.limit > 65535) ? 65535 : args.limit;
+			let lim = 65535
+			if (args.limit === undefined) { }
+			else { lim = (args.limit > 65535) ? 65535 : args.limit }
 			const f = Object.assign({}, spec.filter, args.filter);
 			return Business.find(f, { sort: args.sort, limit: lim } );
 		});
@@ -131,7 +139,7 @@ if (Meteor.isServer) {
 	Meteor.publish('business.getBusiness', function(docId) {
 		const d_cursor = Business.find({_id: docId});
 		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
-		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ business.getBusiness', "Owner:"+doc.userId+', requester: '+this.userId) }
+		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ business.getBusiness, requester: '+this.userId) }
 	});
 }
 
@@ -146,7 +154,7 @@ export const businessList = new ValidatedMethod({
 	run() {
 		if (Meteor.isServer) {
 			try { return Business.find({isActive: true}, {fields: {"code": 1}}).fetch() }
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('list-fetch-failed', err.message) }
 		}
 	}
 });

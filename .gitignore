@@ -2,3 +2,5 @@ node_modules/
 settings.json
 .remote-sync.json
 run
+run.save
+npm-debug.log

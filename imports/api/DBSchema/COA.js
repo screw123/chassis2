@@ -1,10 +1,14 @@
 import { Mongo } from 'meteor/mongo';
+import { Meteor } from 'meteor/meteor';
 
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
+import { ValidatedMethod } from 'meteor/mdg:validated-method';
+
+import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 
 const CoA = new Mongo.Collection('CoA');
 
-const Schemas = new SimpleSchema({
+export const CoASchema = {
 	code: {type: Number, unique: true, label: '科目編號'},
 	desc: {type: String, label: '內容'},
 	acctType: {type: String, label: '科目屬性', allowedValues: ['BS', 'PL']},
@@ -21,13 +25,129 @@ const Schemas = new SimpleSchema({
 		}
     }},
 	inactiveAt: {type: Date, label: '停用日期'}
-})
+}
 
-CoA.attachSchema(Schemas);
+export const CoAView = {
+	_id: 'sysID',
+	code: 'text',
+  	desc: 'text',
+	acctType: 'text',
+	isDebit: 'boolean',
+	subcat1: 'text',
+	subcat2: 'text',
+	isActive: 'boolean',
+	createAt: 'date',
+	inactiveAt: 'date',
+};
+
+const publishSpec = [
+	{ 'name': 'CoA.ALL', 'filter': {}},
+	{ 'name': 'CoA.isActive', 'filter': { isActive: true }}
+];
+
+CoA.attachSchema(new SimpleSchema(CoASchema));
+
+export const newCoA = new ValidatedMethod({
+	name: 'CoA.newCoA',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['system.admin'],
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
+	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
+	validate() {},
+	run(args) {
+		if (Meteor.isServer) {
+			try {
+				const a = CoA.insert(args);
+				return CoA.findOne({_id: a}, {fields: {'code': 1}}).code
+			}
+			catch(err) { throw new Meteor.Error('insert-failed', err.message) }
+		}
+	}
+});
+
+export const updateCoA = new ValidatedMethod({
+	name: 'CoA.updateCoA',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['system.admin'],
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
+	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
+	validate() {},
+	run({filter, args}) {
+		if (Meteor.isServer) {
+			try {
+				const a = CoA.update(filter, {$set: args});
+				return '更新了'+a+'張文件';
+			}
+			catch(err) { throw new Meteor.Error('update-failed', err.message)}
+		}
+	}
+});
+
+export const deleteCoA = new ValidatedMethod({
+	name: 'CoA.deleteCoA',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['system.admin'],
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
+	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
+	validate() {},
+	run(args) {
+		if (Meteor.isServer) {
+			try {
+				const a= CoA.remove(args);
+				return '移除了'+a+'張文件';
+			 }
+			catch(err) { throw new Meteor.Error('delete-failed', err.message) }
+		}
+	}
+});
+
+export const downloadCoA = new ValidatedMethod({
+	name: 'CoA.downloadCoA',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
+	validate() {},
+	run({query, filter}) {
+		if (Meteor.isServer) {
+			try { return CoA.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).fetch() }
+			catch(err) { throw new Meteor.Error('download-failed', err.message) }
+		}
+	}
+});
+
+export const qtyCoA = new ValidatedMethod({
+	name: 'CoA.qtyCoA',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
+	validate() {},
+	run({query, filter}) {
+		if (Meteor.isServer) {
+			try { return CoA.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
+			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
+		}
+	}
+});
 
 if (Meteor.isServer) {
-	Meteor.publish('CoA.ALL', function tasksPublication() {
-		return CoA.find();
+	publishSpec.forEach((spec) => {
+		Meteor.publish(spec.name, function(args) {
+			let lim = 65535
+			if (args.limit === undefined) { }
+			else { lim = (args.limit > 65535) ? 65535 : args.limit }
+			const f = Object.assign({}, spec.filter, args.filter);
+			return CoA.find(f, { sort: args.sort, limit: lim } );
+		});
+	});
+
+	Meteor.publish('CoA.getCoA', function(docId) {
+		const d_cursor = CoA.find({_id: docId});
+		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
+		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ CoA.getCoA, requester: '+this.userId) }
 	});
 }
 
@@ -45,7 +165,7 @@ export const CoAList = new ValidatedMethod({
 				const a= CoA.find({isActive: true}, {fields: {"code": 1, "desc": 1}}).fetch();
 				return a.map((v) => {return {_id: v._id, name: v.code + ' - ' + v.desc }});
 			}
-			catch(err) { return err }
+			catch(err) { throw new Meteor.Error('list-fetch-failed', err.message) }
 		}
 	}
 });
