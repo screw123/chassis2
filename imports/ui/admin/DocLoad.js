@@ -173,7 +173,7 @@ class Store {
 		switch(v) {
 			case 'date':
 			case 'datetime':
-				return moment();
+				return null;
 			case 'url':
 				return '上傳檔案';
 			case 'sysID':
@@ -377,7 +377,7 @@ const store = new Store();
 				return (
 					<div className="default-textField">
 						<DatePicker disabled={store.mode=='view'} key={f.name} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
-							value={valStore[f.name].toDate()}
+							value={(valStore[f.name]===null)? null : valStore[f.name].toDate()}
 							onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate)}
 							errorText={errStore[f.name]}
 							textFieldStyle={comStyle}
@@ -389,7 +389,7 @@ const store = new Store();
 					<div className="widget">
 						<div key={f.name+'_date'} className="default-textField">
 							<DatePicker disabled={store.mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
-								value={valStore[f.name].toDate()}
+								value={(valStore[f.name]===null)? null : valStore[f.name].toDate()}
 								onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate, 'date')}
 								errorText={errStore[f.name]}
 								textFieldStyle={comStyle}
@@ -397,7 +397,7 @@ const store = new Store();
 						</div>
 						<div key={f.name+'_time'} className="default-textField">
 							<TimePicker disabled={store.mode=='view'} className="default-textField" format="24hr" floatingLabelText={tableHandle.schema[f.name].label} autoOk={true} disabled={store.mode=='view'}
-								value={valStore[f.name].toDate()}
+								value={(valStore[f.name]===null)? null : valStore[f.name].toDate()}
 								onChange={(a, newDate) => store.updateVal(valStore, errStore, f.type, f.name, newDate, 'time')}
 								errorText={errStore[f.name]}
 								textFieldStyle={comStyle}
