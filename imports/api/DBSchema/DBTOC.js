@@ -1,9 +1,24 @@
-import Claims, {ClaimSchema, ClaimsView, newClaim, updateClaim, deleteClaim, downloadClaim, qtyClaim} from './claims.js';
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
+
+import Claims, {ClaimSchema, ClaimsView, newClaim, updateClaim, deleteClaim, downloadClaim, qtyClaim} from './claims.js';
+import ClaimsHistory, {ClaimsHistorySchema, ClaimsHistoryView, newClaimsHistory, deleteClaimsHistory, downloadClaimsHistory, qtyClaimsHistory} from './claimsHistory.js'
+
 import CoA, {CoASchema, CoAView, newCoA, updateCoA, deleteCoA, downloadCoA, qtyCoA} from './COA.js'
 
 export const tableHandles = (c) => {
 	switch(c) {
+		case 'business':
+			return {
+				'main': Business,
+				'schema': Object.assign({}, BusinessSchema, {'_id': {label: 'ID'}}),
+				'view': BusinessView,
+				'new': newBusiness,
+				'update': updateBusiness,
+				'delete': deleteBusiness,
+				'download': downloadBusiness,
+				'count': qtyBusiness,
+				'singleDoc': 'business.getBusiness'
+			};
 		case 'claims':
 			return {
 				'main': Claims,
@@ -16,17 +31,17 @@ export const tableHandles = (c) => {
 				'count': qtyClaim,
 				'singleDoc': 'claims.getClaim'
 			};
-		case 'business':
+		case 'claimsHistory':
 			return {
-				'main': Business,
-				'schema': Object.assign({}, BusinessSchema, {'_id': {label: 'ID'}}),
-				'view': BusinessView,
-				'new': newBusiness,
-				'update': updateBusiness,
-				'delete': deleteBusiness,
-				'download': downloadBusiness,
-				'count': qtyBusiness,
-				'singleDoc': 'business.getBusiness'
+				'main': ClaimsHistory,
+				'schema': Object.assign({}, ClaimsHistorySchema, {'_id': {label: 'ID'}}),
+				'view': ClaimsHistoryView,
+				'new': newClaimsHistory,
+				'update': undefined,
+				'delete': deleteClaimsHistory,
+				'download': downloadClaimsHistory,
+				'count': qtyClaimsHistory,
+				'singleDoc': 'ClaimsHistory.getClaimsHistory'
 			};
 		case 'CoA':
 			return {

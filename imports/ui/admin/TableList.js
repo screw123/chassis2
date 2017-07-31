@@ -55,6 +55,7 @@ const store = new Store();
 		return (
 			<List>
 				<ListItem primaryText="Claims" onTouchTap={() => { browserHistory.push('/admin/DocList/claims')} } />
+				<ListItem primaryText="ClaimsHistory" onTouchTap={() => { browserHistory.push('/admin/DocList/claimsHistory')} } />
 				<ListItem primaryText="Business" onTouchTap={() => { browserHistory.push('/admin/DocList/business')} } />
 				<ListItem primaryText="CoA" onTouchTap={() => { browserHistory.push('/admin/DocList/CoA')} } />
 			</List>

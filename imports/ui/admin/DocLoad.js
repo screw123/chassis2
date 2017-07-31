@@ -371,6 +371,7 @@ const store = new Store();
 	}
 
 	fieldRenderer(f, valStore, errStore) {
+
 		switch(f.type) {
 			case 'date':
 				return (
@@ -406,6 +407,7 @@ const store = new Store();
 				);
 			case 'sysID':
 			case 'text':
+				console.log('fieldRenderer', f.name, tableHandle.schema[f.name])
 				return (
 					<TextField disabled={store.mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={store.mode=='view'} onChange={(e) => store.updateVal(valStore, errStore, f.type, f.name, e.target.value)} errorText={errStore[f.name]} />
 				);
