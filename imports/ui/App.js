@@ -24,7 +24,10 @@ class CommonDialog {
 	@observable msg = '';
 	@observable show= false;
 	@action setShowCommonDialog(b) { this.show = b }
-	@action setCommonDialogMsg(m) { this.msg = m }
+	@action setCommonDialogMsg(m) {
+		console.log('CommonDialog.setCommonDialogMsg', m)
+		this.msg = m;
+	}
 }
 
 class CommonSnackBar {

@@ -54,11 +54,14 @@ const store = new Store();
 	getTables() {
 		return (
 			<List>
+				<ListItem primaryText="Users" onTouchTap={() => { browserHistory.push('/admin/userList')} } />
 				<ListItem primaryText="Claims" onTouchTap={() => { browserHistory.push('/admin/DocList/claims')} } />
 				<ListItem primaryText="ClaimsHistory" onTouchTap={() => { browserHistory.push('/admin/DocList/claimsHistory')} } />
+
 				<ListItem primaryText="Business" onTouchTap={() => { browserHistory.push('/admin/DocList/business')} } />
 				<ListItem primaryText="Project" onTouchTap={() => { browserHistory.push('/admin/DocList/project')} } />
 				<ListItem primaryText="CoA" onTouchTap={() => { browserHistory.push('/admin/DocList/CoA')} } />
+				<ListItem primaryText="Status" onTouchTap={() => { browserHistory.push('/admin/DocList/status')} } />
 			</List>
 		)
 	}

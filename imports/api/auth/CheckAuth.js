@@ -21,6 +21,7 @@ export const checkAuth = (roles) => {
 			_.each(roles, function(role) {
 				if (!Roles.userIsInRole(u, role)) { return reject("用戶沒有相關權限.") }
 			})
+			if (!u.isActive) { return reject("用戶已停用.") }
 			return resolve(true);
 		}
 		catch(err) { return reject(err) }

@@ -36,7 +36,8 @@ export default class UserChip extends Component {
 
 	render() {
 		let status;
-		if (Meteor.users.findOne({_id:this.props.userId}).status.idle) { status = 2 }
+		if (Meteor.users.findOne({_id:this.props.userId})===undefined) {status = 0}
+		else if (Meteor.users.findOne({_id:this.props.userId}).status.idle) { status = 2 }
 		else if (Meteor.users.findOne({_id:this.props.userId}).status.online) { status = 1 }
 		else { status = 0}
 		return (

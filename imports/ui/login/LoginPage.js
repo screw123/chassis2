@@ -47,7 +47,12 @@ const store = new Store();
 	}
 
 	componentWillMount() {
-		if (Meteor.userId() != null) { browserHistory.replace('/') }
+		if (Meteor.user()==null) { }
+		else {
+			if (!Meteor.user().isActive) {  }
+			else if (Meteor.userId() != null) { browserHistory.replace('/') }
+		}
+
 	}
 
 	handleSubmit(e) {

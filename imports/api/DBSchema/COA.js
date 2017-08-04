@@ -41,8 +41,7 @@ export const CoAView = {
 };
 
 const publishSpec = [
-	{ 'name': 'CoA.ALL', 'filter': {}},
-	{ 'name': 'CoA.isActive', 'filter': { isActive: true }}
+	{ 'name': 'CoA.ALL', 'filter': {}}
 ];
 
 CoA.attachSchema(new SimpleSchema(CoASchema));

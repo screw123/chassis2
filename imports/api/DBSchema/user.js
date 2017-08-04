@@ -1,6 +1,12 @@
 import { Mongo } from 'meteor/mongo';
+import { Meteor } from 'meteor/meteor';
 
-import { UserStatus } from 'meteor/mizzao:user-status';
+import { SimpleSchema } from 'meteor/aldeed:simple-schema';
+import { ValidatedMethod } from 'meteor/mdg:validated-method';
+
+import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
+
+// This is not a standard Schema/method page, but a dummy page for use together with the admin List/load engine
 
 if (Meteor.isServer) {
 	Meteor.publish('user.profile', function a() {

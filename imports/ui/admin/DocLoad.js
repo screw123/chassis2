@@ -125,8 +125,10 @@ class Store {
 
 		switch(m) {
 			case 'new':
+				this.mode = 'new';
 				break;
 			case 'edit':
+				this.mode = 'edit';
 				this.loadDocHandler = Meteor.subscribe(tableHandle['singleDoc'], d, {
 					onReady: () => { this.loadForm(d) },
 					onStop: (e) => { console.log(e) }
@@ -336,7 +338,7 @@ const store = new Store();
 				return resolve(true);
 			}
 			catch(err) { //On user issue, use master common dialog to display
-				this.props.setCommonDialogMsg(err);
+				this.props.setCommonDialogMsg(err.message);
 				this.props.setShowCommonDialog(true);
 				browserHistory.push('/login');
 				return reject(err);
@@ -345,6 +347,7 @@ const store = new Store();
 	}
 
 	async componentWillMount() { //table wrong: alert; mode wrong: 404; id wrong: pop up
+		let a = await this.verifyUser(store.rolesAllowed);
 		tableHandle = tableHandles(this.props.params.tableName);
 		if (tableHandle === undefined) {
 			//browserHistory.goBack()
@@ -352,10 +355,11 @@ const store = new Store();
 			this.props.setShowCommonDialog(true);
 		}
 		store.changeDoc(this.props.params.tableName, this.props.params.mode, this.props.params.id); //prep the whole form. will handle error mode by re-direct to /404
-		const a = await this.setMode(); //to load doc content into store if it's edit/view
+		a = await this.setMode(); //to load doc content into store if it's edit/view
 	}
 
 	async componentWillReceiveProps(nextProps) {
+		let a = await this.verifyUser(store.rolesAllowed);
 		tableHandle = tableHandles(nextProps.params.tableName);
 		if (tableHandle === undefined) {
 			//browserHistory.goBack()
@@ -363,7 +367,7 @@ const store = new Store();
 			nextProps.setShowCommonDialog(true);
 		}
 		store.changeDoc(nextProps.params.tableName, nextProps.params.mode, nextProps.params.id); //prep the whole form. will handle error mode by re-direct to /404
-		const a = await this.setMode(); //to load doc content into store if it's edit/view
+		a = await this.setMode(); //to load doc content into store if it's edit/view
 	}
 
 	async setMode() {
@@ -407,7 +411,6 @@ const store = new Store();
 				);
 			case 'sysID':
 			case 'text':
-				console.log('fieldRenderer', f.name, tableHandle.schema[f.name])
 				return (
 					<TextField disabled={store.mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={store.mode=='view'} onChange={(e) => store.updateVal(valStore, errStore, f.type, f.name, e.target.value)} errorText={errStore[f.name]} />
 				);
@@ -662,6 +665,7 @@ const store = new Store();
 		//convert subTable keys + insert into newDoc
 		let newDoc = Object.assign({}, fieldsValue);
 		if (subTableValue.length > 0) {
+			console.log('subTableValue.length', subTableValue.length)
 			let subTableName = store.subTableFields[0]['name']
 			subTableName = subTableName.substring(0,subTableName.indexOf('.'))
 

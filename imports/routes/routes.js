@@ -15,6 +15,7 @@ import AdminPortal from '../ui/admin/Admin.js'
 import AdminTableList from '../ui/admin/TableList.js'
 import AdminDocList from '../ui/admin/DocList.js'
 import AdminDocLoad from '../ui/admin/DocLoad.js'
+import AdminUserList from '../ui/admin/userList.js'
 
 import App from '../ui/App.js'
 
@@ -35,6 +36,7 @@ export const renderRoutes = () => (
             <Route path="admin">
                 <IndexRoute component={AdminTableList}/>
                 <Route path="TableList" component={AdminTableList} />
+                <Route path="UserList" component={AdminUserList} />
                 <Route path="DocList/:tableName" component={AdminDocList} />
                 <Route path="DocLoad/:tableName/:mode(/:id)" component={AdminDocLoad} />
             </Route>

@@ -33,8 +33,7 @@ export const ProjectView = {
 };
 
 const publishSpec = [
-	{ 'name': 'project.ALL', 'filter': {}},
-	{ 'name': 'project.isActive', 'filter': { isActive: true }}
+	{ 'name': 'project.ALL', 'filter': {}}
 ];
 
 Project.attachSchema(new SimpleSchema(ProjectSchema));

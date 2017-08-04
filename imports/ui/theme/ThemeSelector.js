@@ -116,5 +116,9 @@ export const fieldStyle = {
 	boolean: {
 		header: {flex: '0 1 50px', height: '24px', overflow: 'hidden', textAlign: 'center'},
 		content: {flex: '0 1 50px', height: '24px', overflow: 'hidden', textAlign: 'center'}
-	}
+	},
+	array: {
+		header: {flex: '0 1 200px', height: '24px', overflow: 'hidden'},
+		content: {flex: '0 1 200px', height: '24px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}
+	},
 }

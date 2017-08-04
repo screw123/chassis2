@@ -1,5 +1,6 @@
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
 import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
+import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
 
 import Claims, {ClaimSchema, ClaimsView, newClaim, updateClaim, deleteClaim, downloadClaim, qtyClaim} from './claims.js';
 import ClaimsHistory, {ClaimsHistorySchema, ClaimsHistoryView, newClaimsHistory, deleteClaimsHistory, downloadClaimsHistory, qtyClaimsHistory} from './claimsHistory.js'
@@ -67,6 +68,18 @@ export const tableHandles = (c) => {
 				'download': downloadProject,
 				'count': qtyProject,
 				'singleDoc': 'project.getProject'
+			};
+		case 'status':
+			return {
+				'main': Status,
+				'schema': Object.assign({}, StatusSchema, {'_id': {label: 'ID'}}),
+				'view': StatusView,
+				'new': newStatus,
+				'update': updateStatus,
+				'delete': deleteStatus,
+				'download': downloadStatus,
+				'count': qtyStatus,
+				'singleDoc': 'status.getStatus'
 			};
 		default:
 			return undefined;

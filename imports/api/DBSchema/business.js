@@ -33,8 +33,7 @@ export const BusinessView = {
 };
 
 const publishSpec = [
-	{ 'name': 'business.ALL', 'filter': {}},
-	{ 'name': 'business.isActive', 'filter': { isActive: true }}
+	{ 'name': 'business.ALL', 'filter': {}}
 ];
 
 Business.attachSchema(new SimpleSchema(BusinessSchema));
