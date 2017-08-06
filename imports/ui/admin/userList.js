@@ -41,6 +41,7 @@ import FilterDialog from '../component/FilterDialog.js';
 import { checkAuth } from '../../api/auth/CheckAuth.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
+import { updateProfile, updateRole, updateEmail } from '../../api/DBSchema/user.js';
 
 //Begin code
 let dataTable;
@@ -136,7 +137,8 @@ class editDialog {
 		slackUserName: '',
 		email: '',
 		roles: [],
-		isActive: false
+		isActive: false,
+		rolesField: ''
 	}
 	@observable show= false;
 	@action setShow(b) { this.show = b }
@@ -290,8 +292,6 @@ let sync_DBList = null;
 	}
 
 	editUser(index) {
-		ed.updateRoleList(Meteor.roles.find().fetch())
-		console.log(ed.roleList)
 		ed.updateVal('firstName', store.DBList[index].profile.firstName);
 		ed.updateVal('lastName', store.DBList[index].profile.lastName);
 		ed.updateVal('slackUserName', store.DBList[index].profile.slackUserName);
@@ -299,6 +299,17 @@ let sync_DBList = null;
 		ed.updateVal('roles', store.DBList[index].roles);
 		ed.updateVal('isActive', store.DBList[index].isActive);
 		ed.setCurrentDocIndex(index);
+	}
+
+	saveChange() {
+		let userIdToUpdate = store.DBList[ed.currentDocIndex]['_id']
+		updateProfile.callPromise({id: userIdToUpdate, args: {profile: {
+			firstName: ed.profile['firstName'],
+			lastName: ed.profile['lastName'],
+			slackUserName: ed.profile['slackUserName']
+		}, isActive: ed.profile['isActive'] }});
+		updateEmail.callPromise({id: userIdToUpdate, args: ed.profile['email']});
+		updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles'].toJS()});
 	}
 
 	render() {
@@ -362,11 +373,12 @@ let sync_DBList = null;
 										return <ListItem primaryText={a} rightIcon={<FontIcon className="fa fa-trash" onTouchTap={()=> {ed.removeRole(a)}} />} />}
 									)}
 								</ListM>
-								{(ed.roleList.length<1) && <AutoComplete className="default-textField" floatingLabelText='新增權限' name='addRoles' filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
-									style={comStyle} menuStyle={comStyle} listStyle={comStyle}
-									dataSource={ed.roleList.toJS()}
-									onNewRequest={(v, i) => { ed.addRole(v) }}
-								/>}
+								<TextField className="default-textField" name='addRoles' hintText="請輸入文字" value={ed.profile['rolesField']} floatingLabelText='新增權限' onChange={(e) => ed.updateVal('rolesField', e.target.value)} onKeyPress={(e) => {
+									if (e.charCode === 13) { // enter key pressed
+										e.preventDefault();
+										ed.addRole(ed.profile['rolesField'])
+									}
+								}} />
 							</div>
 						</Dialog>
 					</div>

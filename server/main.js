@@ -18,8 +18,8 @@ _ = lodash;
 Meteor.startup(() => {
 	// code to run on server at startup
 
-	Meteor.publish(null, function (){
-  		return Meteor.roles.find({})
+	Meteor.publish('allRoles', function (){
+  		return Roles.getAllRoles();
 	})
 
 });
