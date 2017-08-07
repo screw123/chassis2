@@ -41,7 +41,7 @@ import FilterDialog from '../component/FilterDialog.js';
 import { checkAuth } from '../../api/auth/CheckAuth.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
-import { updateProfile, updateRole, updateEmail } from '../../api/DBSchema/user.js';
+import { updateProfile, updateRole, updateEmail, resetPassword } from '../../api/DBSchema/user.js';
 
 //Begin code
 let dataTable;
@@ -130,7 +130,6 @@ const store = new Store();
 
 class editDialog {
 	@observable currentDocIndex = '';
-	@observable roleList = [];
 	@observable profile = {
 		firstName: 'aaa',
 		lastName: '',
@@ -146,7 +145,6 @@ class editDialog {
 	@action updateVal(v, newVar) { this.profile[v] = newVar }
 	@action removeRole(r) { this.profile['roles'].splice(this.profile['roles'].findIndex((a)=> { return a==r}), 1)}
 	@action addRole(r) { this.profile['roles'].push(r) }
-	@action updateRoleList(l) {this.roleList = l}
 }
 const ed = new editDialog();
 
@@ -174,18 +172,24 @@ let sync_DBList = null;
 		const a = await this.verifyUser(store.rolesAllowed);
 		store.changeTable(); //Store.changeMode will handle error path by re-direct to /404
 
-		Meteor.subscribe('user.ALL', {
+		sync_DBList = Meteor.subscribe('user.ALL', {
 			onReady: () => { store.updateDBList() },
 			onStop: (e) => { console.log(e) }
 		});
 	}
 
 	async componentWillReceiveProps(nextProps) {
-		store.changeTable();
-		this.forceUpdate();
+		const a = await this.verifyUser(store.rolesAllowed);
+		store.changeTable(); //Store.changeMode will handle error path by re-direct to /404
+
+		sync_DBList = Meteor.subscribe('user.ALL', {
+			onReady: () => { store.updateDBList() },
+			onStop: (e) => { console.log(e) }
+		});
 	}
 
 	componentWillUnmount() {
+		if (Meteor.isClient) { sync_DBList.stop() }
 	}
 
 	handleDownloadCSV(a) {
@@ -285,7 +289,7 @@ let sync_DBList = null;
 						ed.setShow(true);
 					}} />
 
-					<MenuItem value={2} primaryText="重設password" leftIcon={<FontIcon className="fa fa-trash-o" />} onTouchTap={(e) => this.deleteDoc(row)} />
+					<MenuItem value={2} primaryText="重設password" leftIcon={<FontIcon className="fa fa-trash-o" />} onTouchTap={(e) => this.resetPassword(index)} />
 				</IconMenu>
 			</div>
 		)
@@ -302,15 +306,39 @@ let sync_DBList = null;
 	}
 
 	saveChange() {
-		let userIdToUpdate = store.DBList[ed.currentDocIndex]['_id']
-		updateProfile.callPromise({id: userIdToUpdate, args: {profile: {
-			firstName: ed.profile['firstName'],
-			lastName: ed.profile['lastName'],
-			slackUserName: ed.profile['slackUserName']
-		}, isActive: ed.profile['isActive'] }});
-		updateEmail.callPromise({id: userIdToUpdate, args: ed.profile['email']});
-		updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles'].toJS()});
+		try {
+			let userIdToUpdate = store.DBList[ed.currentDocIndex]['_id']
+			updateProfile.callPromise({id: userIdToUpdate, args: {profile: {
+				firstName: ed.profile['firstName'],
+				lastName: ed.profile['lastName'],
+				slackUserName: ed.profile['slackUserName']
+			}, isActive: ed.profile['isActive'] }});
+			updateEmail.callPromise({id: userIdToUpdate, args: ed.profile['email']});
+			updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles'].toJS()});
+		} catch(err) {
+			this.props.setCommonDialogMsg('ui/admin/userList.js {main.saveChange} ' + err.toString());
+			this.props.setShowCommonDialog(true);
+			store.submitting(false);
+		}
+		this.props.setSnackBarMsg('Save successful');
+		this.props.setSnackBarAction({}, '');
+		this.props.setShowSnackBar(true);
 	}
+
+	resetPassword(index) {
+		try {
+			let userIdToUpdate = store.DBList[index]['_id'];
+			resetPassword.callPromise({id: userIdToUpdate, password: 'abc123'});
+		} catch(err) {
+			this.props.setCommonDialogMsg('ui/admin/userList.js {main.resetPassword} ' + err.toString());
+			this.props.setShowCommonDialog(true);
+			store.submitting(false);
+		}
+		this.props.setSnackBarMsg('Reset password to abc123, please notify user');
+		this.props.setSnackBarAction({}, '');
+		this.props.setShowSnackBar(true);
+	}
+
 
 	render() {
 		let pageHeader = '用戶列表';

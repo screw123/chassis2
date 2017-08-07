@@ -93,7 +93,7 @@ const store = new Store()
 					{this.genLoginCard()}
 					<List>
 						<ListItem onTouchTap={() => this.handleGoToPage("/dashboard")} primaryText="Dashboard" />
-						<ListItem onTouchTap={() => this.handleGoToPage("/admin")} primaryText="Admin" />
+						{Roles.userIsInRole(Meteor.userId(), 'system.admin') && <ListItem onTouchTap={() => this.handleGoToPage("/admin")} primaryText="Admin" />}
 						<ListItem primaryText="費用報銷" primaryTogglesNestedList={true} nestedItems={[
 							<ListItem onTouchTap={() => this.handleGoToPage("/claims/item/new")} primaryText="新增報銷" key={"menu_101"} />,
 							<ListItem onTouchTap={() => this.handleGoToPage("/claims/list/MyClaims")} primaryText="我的報銷" key={"menu_102"} />,

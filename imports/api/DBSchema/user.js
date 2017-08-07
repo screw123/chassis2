@@ -42,10 +42,6 @@ export const userList = new ValidatedMethod({
 export const updateProfile = new ValidatedMethod({
 	name: 'user.updateProfile',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
-	checkRoles: {
-		roles: ['system.admin'],
-		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
-	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
@@ -54,6 +50,9 @@ export const updateProfile = new ValidatedMethod({
 	run({id, args}) {
 		if (Meteor.isServer) {
 			try {
+				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
+					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to update profile.') }
+				}
 				Meteor.users.update({_id: id}, {$set: args}); //this is only for profile
 			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
@@ -92,14 +91,33 @@ export const updateEmail = new ValidatedMethod({
 	run({id, args}) {
 		if (Meteor.isServer) {
 			try {
-				console.log('updateEmail', id, args);
 				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
 					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to update email.') }
 				}
-				const oldEmail = Meteor.users.find({_id: id}).fetch().email[0].address
-				console.log(oldEmail); //fixme
-				Meteor.users.update({_id: id}, {$set: {email: {}}});
+				const oldEmail = Meteor.users.findOne({_id: id}).emails[0].address
 				Accounts.addEmail(id, args, true);
+				Accounts.removeEmail(id, oldEmail);
+			}
+			catch(err) { throw new Meteor.Error('update-failed', err.message) }
+		}
+	}
+});
+
+export const resetPassword = new ValidatedMethod({
+	name: 'user.resetPassword',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate() { },
+	run({id, password}) {
+		if (Meteor.isServer) {
+			try {
+				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
+					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to reset password.') }
+				}
+				Accounts.setPassword(id, password, true);
 			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
 		}

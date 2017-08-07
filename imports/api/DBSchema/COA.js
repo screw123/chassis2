@@ -12,7 +12,7 @@ export const CoASchema = {
 	code: {type: Number, unique: true, label: '科目編號'},
 	desc: {type: String, label: '內容'},
 	acctType: {type: String, label: '科目屬性', allowedValues: ['BS', 'PL']},
-	isDebit: {type: Boolean, label: '是否Debit'},
+	isDebit: {type: Boolean, label: 'Debit?'},
 	subcat1: {type: String, label: '科目分類1', allowedValues: ['BANK', 'AR', 'AP', 'INV', 'LOAN', 'PREPAY-IN', 'PREPAY-OUT', 'FA', 'FA-DEPRE', 'ACCRUAL', 'OTHER-BS', 'GP', 'OPEX', 'OTHER-PL', 'TAX', 'PL-DEPRE'] },
 	subcat2: {type: String, label: '科目分類2'},
 	isActive: {type: Boolean, label: '使用中', defaultValue: true },

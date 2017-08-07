@@ -34,7 +34,7 @@ export default class TableFilterSortChip extends Component {
 		field = this.props.k;
 		if (this.props.v == undefined) { return <div></div> }
 		return <Chip key={field+"_sort"} backgroundColor={tableStyle.sortChip.chipBGColor} labelColor={tableStyle.sortChip.chipTextColor} onRequestDelete={() => this.props.onDel(undefined, this.props.k)}>
-			<Avatar key={field+"_filter"} color={tableStyle.sortChip.avatarTextColor} backgroundColor={tableStyle.sortChip.avatarBGColor} icon={(this.props.v==1)? <FontIcon className="fa fa-sort-alpha-asc" /> : <FontIcon className="fa fa-sort-alpha-desc" /> }/>
+			<Avatar key={field+"_sort"} color={tableStyle.sortChip.avatarTextColor} backgroundColor={tableStyle.sortChip.avatarBGColor} icon={(this.props.v==1)? <FontIcon className="fa fa-sort-alpha-asc" /> : <FontIcon className="fa fa-sort-alpha-desc" /> }/>
 			{this.props.fieldName}
 		</Chip>
 	}

@@ -58,10 +58,24 @@ class Store {
 	@observable tableMenuAnchor = null; //display state for sort/filter menu
 	@observable limit = 20; //how many rows to show initially
 	@observable rowHeight = 24; //table row Height, do not change easily
+	@observable enableMultiSelect = false;
 	@observable isMultiSelect = false;
 	@observable multiSelected = [];
 	@observable rowWidth = window.innerWidth - 50;
 	@observable showFilterDialog = false;
+	@observable enableNew = false;
+	@observable enableDownload = false;
+	@observable enableDownloadAll = false;
+
+	@action enableDownload(dl, dl_all) {
+		this.enableDownload = dl;
+		this.enableDownloadAll = dl_all;
+	}
+	@action enableNew(a) { this.enableNew = a }
+	@action setRolesAllowed(a) {
+		console.log('setRolesAllowed', a)
+		this.rolesAllowed = a }
+	@action enableMultiSelect(a) { this.enableMultiSelect = a }
 	@action updateDocCount() { tableHandle['count'].callPromise({'query': this.table+'.ALL', 'filter': this.tableFilter}).then(action((a) => this.queryDocCount = a)) }
 	@action clearDBList() {
 		this.DBList.clear();
@@ -127,14 +141,19 @@ class Store {
 		this.toggleMultiSelect(false);
 		this.updateDocCount();
 	}
-	@action async changeTable(m) {
+	@action async changeTable(m, includeFields, limit, query) {
 		//reset store
 		this.tableSort = {};
 		this.tableFilter = {};
-		this.tableView = Object.keys(tableHandle['view']).filter((v) => {
-			console.log(tableHandle['view'][v] + ': ' + ".$.=" + v.includes('.$.')+", isObject="+_.isObject(tableHandle['view'][v] ));
-			return (!v.includes('.$.') && !_.isPlainObject(tableHandle['view'][v]))
-		});
+		if (includeFields === undefined) { //if fields to show specified, then show specified fields
+			this.tableView = Object.keys(tableHandle['view']).filter((v) => {
+				return (!v.includes('.$.') && !_.isPlainObject(tableHandle['view'][v]))
+			});
+		} else { // otherwise show all fields
+			this.tableView = Object.keys(tableHandle['view']).filter((v) => {
+				return (!v.includes('.$.') && !_.isPlainObject(tableHandle['view'][v]) && includeFields.includes(v))
+			});
+		}
 		this.tableHeaderCurrentItem = undefined;
 		this.showTableMenu = false;
 		this.tableMenuAnchor = null;
@@ -148,14 +167,14 @@ class Store {
 		}, {});
 		this.tableFilter = Object.assign({}, this.tableSort);
 		this.table = m;
-		this.DBListQuery = m+'.ALL'
+		this.DBListQuery = query
 		this.updateDocCount();
 	}
 }
 const store = new Store();
 let sync_DBList = null;
 
-@observer export default class AdminDocList extends Component {
+@observer export default class DocList extends Component {
 	constructor(props) { super(props) }
 
 	async verifyUser(roles) {
@@ -174,8 +193,14 @@ let sync_DBList = null;
 	}
 
 	async componentWillMount() {
-		tableHandle = tableHandles(this.props.params.tableName);
-		store.changeTable(this.props.params.tableName); //Store.changeMode will handle error path by re-direct to /404
+		store.setRolesAllowed(this.props.rolesAllowed);
+		tableHandle = tableHandles(this.props.table);
+		//Store.changeMode will handle error path by re-direct to /404
+		store.changeTable(this.props.table, this.props.includeFields, this.props.initLimit, this.props.query);
+		store.enableMultiSelect(this.props.multiSelect);
+		store.enableDownload(this.props.enableDownload, this.props.enableDownloadAll);
+		store.enableNew(this.props.enableNew);
+
 		const a = await this.setMode();
 		if (Meteor.isClient) {
 			sync_DBList.start();
@@ -410,15 +435,15 @@ let sync_DBList = null;
 							</CardText>
 							<CardActions>
 
-								<RaisedButton label={"多選"+((store.isMultiSelect)? "("+(store.multiSelected.length)+")": "")} style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />
+								{store.enableMultiSelect && <RaisedButton label={"多選"+((store.isMultiSelect)? "("+(store.multiSelected.length)+")": "")} style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />}
 
 								{store.isMultiSelect && <RaisedButton label="複數刪除" style={buttonStyle} secondary={true} icon={<FontIcon className="fa fa-trash-o" />} onTouchTap={() => this.deleteDoc(store.multiSelected.toJS())} />}
 
-								{!store.isMultiSelect && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
+								{!store.isMultiSelect && store.enableNew && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
 
-								{!store.isMultiSelect && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => this.handleDownloadCSV(store.DBList)} />}
+								{!store.isMultiSelect && store.enableDownload && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => this.handleDownloadCSV(store.DBList)} />}
 
-								{!store.isMultiSelect && <RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={() =>
+								{!store.isMultiSelect && store.enableDownloadAll && <RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={() =>
 									this.handleDownloadCSVAll()
 								} />}
 							</CardActions>

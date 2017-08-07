@@ -16,6 +16,7 @@ import AdminTableList from '../ui/admin/TableList.js'
 import AdminDocList from '../ui/admin/DocList.js'
 import AdminDocLoad from '../ui/admin/DocLoad.js'
 import AdminUserList from '../ui/admin/userList.js'
+import ClaimTest from '../ui/claims/ClaimTest.js'
 
 import App from '../ui/App.js'
 
@@ -30,6 +31,7 @@ export const renderRoutes = () => (
             <Route path="dashboard" component={Dashboard}/>
             <Route path="claims">
                 <IndexRoute component={ClaimList}/>
+                <Route path="ClaimTest" component={ClaimTest}/>
 				<Route path="list(/:mode)" component={ClaimList}/>
                 <Route path="item/:mode(/:id)" component={EditClaim}/>
             </Route>
