@@ -2,13 +2,12 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session'
-import { browserHistory, Link } from 'react-router';
+import { browserHistory } from 'react-router';
 import { observer } from "mobx-react";
 import mobx, { observable, useStrict, action } from 'mobx';
-import { autorunX, observeX } from '../../api/tracker-mobx-autorun'
+import { autorunX, observeX } from '../../api/tracker-mobx-autorun.js'
 useStrict(true);
 //Material-ui import
-import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import FontIcon from 'material-ui/FontIcon';
 import IconButton from 'material-ui/IconButton';
@@ -20,23 +19,18 @@ import Paper from 'material-ui/Paper';
 import Dialog from 'material-ui/Dialog';
 import Checkbox from 'material-ui/Checkbox';
 import {Card, CardHeader, CardTitle, CardText, CardActions} from 'material-ui/Card';
-import Chip from 'material-ui/Chip';
-import Avatar from 'material-ui/Avatar';
 //Package ad-hoc function import
-import FileSaver from 'file-saver';
 import 'react-virtualized/styles.css'
 import { InfiniteLoader, List } from 'react-virtualized'
 import Measure from 'react-measure';
-import moment from 'moment';
-import accounting from 'accounting';
 //Custom formatting/component import
-import { tableStyle, fieldStyle, comStyle, buttonStyle} from '../theme/ThemeSelector.js';
-import StatusChip from '../component/StatusChip.js';
-import UserChip from '../component/UserChip.js';
+import { tableStyle, fieldStyle, buttonStyle} from '../theme/ThemeSelector.js';
 import TableFilterSortChip  from '../component/TableFilterSortChip.js';
 import FilterDialog from '../component/FilterDialog.js';
 //Custom function import
 import { checkAuth } from '../../api/auth/CheckAuth.js';
+import { cleanObject } from '../../api/helper.js';
+import { cellRenderer, handleDownloadCSV } from './DocListHelper.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
 
@@ -58,24 +52,27 @@ class Store {
 	@observable tableMenuAnchor = null; //display state for sort/filter menu
 	@observable limit = 20; //how many rows to show initially
 	@observable rowHeight = 24; //table row Height, do not change easily
-	@observable enableMultiSelect = false;
+	@observable isMultiSelectEnabled = false;
 	@observable isMultiSelect = false;
 	@observable multiSelected = [];
 	@observable rowWidth = window.innerWidth - 50;
 	@observable showFilterDialog = false;
-	@observable enableNew = false;
-	@observable enableDownload = false;
-	@observable enableDownloadAll = false;
+	@observable allowNewDoc = false;
+	@observable allowDownload = false;
+	@observable allowDownloadAll = false;
+	@observable allowMultiDelete = false;
+	@observable cardTitle = '';
 
-	@action enableDownload(dl, dl_all) {
-		this.enableDownload = dl;
-		this.enableDownloadAll = dl_all;
+	@action setCardTitle(a) { if (a===undefined) { this.cardTitle = ''} else { this.cardTitle = a }}
+	@action setDownload(dl, dl_all) {
+		this.allowDownload = dl;
+		this.allowDownloadAll = dl_all;
 	}
-	@action enableNew(a) { this.enableNew = a }
-	@action setRolesAllowed(a) {
-		console.log('setRolesAllowed', a)
-		this.rolesAllowed = a }
-	@action enableMultiSelect(a) { this.enableMultiSelect = a }
+	@action setNewDoc(a) { this.allowNewDoc = a }
+	@action setRolesAllowed(a) { this.rolesAllowed = a }
+	@action setEnableMultiSelect(a) { this.isMultiSelectEnabled = a }
+	@action setMultiDelete(a) { this.allowMultiDelete = a }
+
 	@action updateDocCount() { tableHandle['count'].callPromise({'query': this.table+'.ALL', 'filter': this.tableFilter}).then(action((a) => this.queryDocCount = a)) }
 	@action clearDBList() {
 		this.DBList.clear();
@@ -105,7 +102,6 @@ class Store {
 		}
 	}
 	@action setTableMenu(isOpen, anchor, field) {
-		console.log("setTableMenu")
 		if (isOpen) {
 			this.showTableMenu = true;
 			this.tableMenuAnchor = anchor;
@@ -128,18 +124,19 @@ class Store {
 		}
 		if (opType == 1) {
 			//means it contains a gte or lte
-			if (_.isObject(this.tableFilter[f])) { this.tableFilter[f][$gte] = input}
-			else { this.tableFilter[f] = {$gte: input} }
+			if (_.isObject(this.tableFilter[f])) { this.tableFilter[f]['$gte'] = input}
+			else { this.tableFilter[f] = {'$gte': input} }
 		}
 		if (opType == 2) {
 			//means it contains a gte or lte
-			if (_.isObject(this.tableFilter[f])) { this.tableFilter[f][$lte] = input}
-			else { this.tableFilter[f] = {$lte: input} }
+			if (_.isObject(this.tableFilter[f])) { this.tableFilter[f]['$lte'] = input}
+			else { this.tableFilter[f] = {'$lte': input} }
 		}
 		if (opType == -1) { this.tableFilter[f] = undefined }
 		this.addLimit(true);
 		this.toggleMultiSelect(false);
 		this.updateDocCount();
+		console.log('tableFilter', this.tableFilter)
 	}
 	@action async changeTable(m, includeFields, limit, query) {
 		//reset store
@@ -157,7 +154,7 @@ class Store {
 		this.tableHeaderCurrentItem = undefined;
 		this.showTableMenu = false;
 		this.tableMenuAnchor = null;
-		this.limit = 20;
+		this.limit = limit;
 		this.queryDocCount = 0;
 		this.isMultiSelect = false;
 		this.multiSelected = [];
@@ -172,6 +169,7 @@ class Store {
 	}
 }
 const store = new Store();
+const setTableMenu = (isOpen, anchor, field) => store.setTableMenu(isOpen, anchor, field);
 let sync_DBList = null;
 
 @observer export default class DocList extends Component {
@@ -193,30 +191,27 @@ let sync_DBList = null;
 	}
 
 	async componentWillMount() {
-		store.setRolesAllowed(this.props.rolesAllowed);
+		//store.updateRolesAllowed(this.props.rolesAllowed);
+		store.setRolesAllowed(['system.admin'])
 		tableHandle = tableHandles(this.props.table);
 		//Store.changeMode will handle error path by re-direct to /404
 		store.changeTable(this.props.table, this.props.includeFields, this.props.initLimit, this.props.query);
-		store.enableMultiSelect(this.props.multiSelect);
-		store.enableDownload(this.props.enableDownload, this.props.enableDownloadAll);
-		store.enableNew(this.props.enableNew);
+		store.setEnableMultiSelect(this.props.allowMultiSelect);
+		store.setMultiDelete(this.props.allowMultiDelete);
+		store.setDownload(this.props.allowDownload, this.props.allowDownloadAll);
+		store.setNewDoc(this.props.allowNewDoc);
+		store.setCardTitle(this.props.cardTitle);
 
 		const a = await this.setMode();
-		if (Meteor.isClient) {
-			sync_DBList.start();
-		}
+		if (Meteor.isClient) { sync_DBList.start() }
 	}
 
 	async componentWillReceiveProps(nextProps) {
 		store.clearDBList();
-		if (Meteor.isClient) {
-			sync_DBList.stop();
-		 }
+		if (Meteor.isClient) { sync_DBList.stop() }
 		store.changeTable(nextProps.params.tableName);
 		const a = await this.setMode();
-		if (Meteor.isClient) {
-			sync_DBList.start();
-		}
+		if (Meteor.isClient) { sync_DBList.start() }
 		this.forceUpdate();
 	}
 
@@ -226,88 +221,11 @@ let sync_DBList = null;
 
 	async setMode() {
 		const a = await this.verifyUser(store.rolesAllowed);
-		sync_DBList = autorunX(
-			() => { observeX('admin.DBList.Autorun', store.DBList,
-				Meteor.subscribe(store.DBListQuery, {
-					limit: store.limit,
-					sort: JSON.parse(JSON.stringify(store.tableSort)),
-					filter: JSON.parse(JSON.stringify(store.tableFilter))
-				}), tableHandle['main'].find(JSON.parse(JSON.stringify(store.tableFilter)), {
-					sort: JSON.parse(JSON.stringify(store.tableSort)),
-					limit: store.limit
-				})
-			)}
-		);
-	}
-
-	handleDownloadCSV(a) {
-		const csv = Papa.unparse(a);
-		const b = new Blob([csv], { type: "text/plain;charset=utf-8;" });
-      	FileSaver.saveAs(b, store.DBListQuery+".csv");
-	}
-
-	async handleDownloadCSVAll() {
-		const a = await tableHandle['download'].callPromise({'query': store.DBListQuery, 'filter': store.tableFilter});
-		this.handleDownloadCSV(a);
-	}
-
-	cellRenderer(isHeader, value, fieldView, key, field) {
-		const contentType = (isHeader)?'header':'content'
-		if (isHeader) {
-			switch(fieldView) {
-				case 'sysID':
-				case 'numID':
-				case 'date':
-				case 'datetime':
-				case 'text':
-				case 'longText':
-				case 'currency':
-				case 'integer':
-				case 'decimal':
-				case 'url':
-				case 'status':
-				case 'user':
-				case 'boolean':
-				case 'array':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
-						e.preventDefault();
-						store.setTableMenu(true, e.currentTarget, field);
-					}}> { value } </div>;
-				case 'icon':
-					return <div> Error: please manually handle icons </div>;
-				default:
-					return 'Error: fieldView unknown';
-			}
-		} else {
-			switch(fieldView) {
-				case 'sysID':
-				case 'numID':
-				case 'integer':
-				case 'decimal':
-				case 'url':
-				case 'text':
-				case 'longText':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
-				case 'icon':
-					return <div> Error: please manually handle icons </div>;
-				case 'date':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > {(value==undefined) ? '---' :  moment(value).format("YYYY-MM-DD") } </div>
-				case 'datetime':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > {(value==undefined) ? '---' :  moment(value).format("YYYY-MM-DD HH:mm") } </div>
-				case 'currency':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{accounting.formatColumn([value,"999999"], "$", 2)[0] } </div>
-				case 'status':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{value}</div>;
-				case 'user':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} ><UserChip userId={value} /></div>;
-				case 'boolean':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{(value)? <FontIcon className="fa fa-check" /> : <FontIcon className="fa fa-times" />}</div>;
-				case 'array':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.toJS().toString() } </div>;
-				default:
-					return 'Error: fieldView unknown';
-			}
-		}
+		sync_DBList = autorunX( () => { observeX(
+			'admin.DBList.Autorun',
+			store.DBList,
+			Meteor.subscribe(store.DBListQuery, { limit: store.limit, sort: cleanObject(store.tableSort), filter: cleanObject(store.tableFilter)}), tableHandle['main'].find(cleanObject(store.tableFilter), { sort: cleanObject(store.tableSort), limit: store.limit })
+		) } );
 	}
 
 	rowRenderer({ index, isScrolling, key, style }) {
@@ -331,7 +249,7 @@ let sync_DBList = null;
 		return (
 			<div className={rowClass} key={key} style={rowStyle}>
 				{store.isMultiSelect && checkBox}
-				{store.tableView.map((a, index) => this.cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index))}
+				{store.tableView.map((a, index) => cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index))}
 				{!store.isMultiSelect && <IconMenu
 					style={{height: '24px'}}
 					iconButtonElement={<IconButton style={fieldStyle.muiIconElement}><FontIcon className="fa fa-ellipsis-v" /></IconButton>}
@@ -384,71 +302,65 @@ let sync_DBList = null;
 	tableAddSortWarper(seq, field) { store.tableAddSort(seq, field) }
 
 	render() {
-		let pageHeader = '數據庫列表';
-		let cardTitle = _.upperCase(store.table);
 		return (
 			<div>
-				<div className="row-left">
-					<h1>{pageHeader}</h1>
-				</div>
-				<div className="row-left">
-					<div className="widget table-container widget-1col ">
-						<Card style={{ flex: '1 1 auto' }}>
-							<CardTitle title={cardTitle} />
-							<CardText>
-								<div className="row-left">
-									{Object.keys(store.tableSort).map((a) => {
-										return <TableFilterSortChip type='sort' v={store.tableSort[a]} k={a} fieldName={tableHandle['schema'][a].label} onDel={this.tableAddSortWarper} />
-									})}
-									{Object.keys(store.tableFilter).map((a) => { return <TableFilterSortChip type='filter' v={store.tableFilter[a]} k={a} fieldName={tableHandle['schema'][a].label} onDel={this.tableAddFilterWarper} /> })}
-								</div>
-								<Measure bounds onResize={(contentRect) => {
-									store.setRowDimensions(contentRect.bounds.width, contentRect.bounds.height)
-								}}>
-									{({ measureRef }) => (
-										<div ref={measureRef} className="datatable_headerRow">
-											{store.isMultiSelect && <div style={fieldStyle.icon.header}></div>}
-											{store.tableView.map((a) => this.cellRenderer(true, tableHandle['schema'][a].label, tableHandle['view'][a], a+'_head', a))}
-											{!store.isMultiSelect && <div style={fieldStyle.icon.header}></div>}
-										</div>
-									)}
-								</Measure>
-								<InfiniteLoader
-									isRowLoaded={({index}) => !!store.DBList[index]}
-									loadMoreRows={(start, stop) => store.addLimit()}
-									rowCount={store.DBList.length+1}
-									threshold={1}
-								>
-									{({ onRowsRendered, registerChild }) => (
-										<List
-											onRowsRendered={onRowsRendered}
-											noRowsRenderer={() => { <div>沒有相關記錄</div> }}
-											ref={(registerChild) => dataTable = registerChild}
-											width={Session.get("windowWidth")==undefined ? window.innerWidth-50: Session.get("windowWidth")-50}
-											height={Math.min(400, store.rowHeight*store.DBList.length)}
-											rowCount={store.DBList.length}
-											rowHeight={store.rowHeight}
-											rowRenderer={({ index, isScrolling, key, style }) => this.rowRenderer(({ index, isScrolling, key, style })) }
-										/>
-									)}
-								</InfiniteLoader>
-							</CardText>
-							<CardActions>
+				<div className="widget table-container widget-1col ">
+					<Card style={{ flex: '1 1 auto' }}>
+						<CardTitle title={store.cardTitle} />
+						<CardText>
+							<div className="row-left">
+								{Object.keys(store.tableSort).map((a) => {
+									return <TableFilterSortChip type='sort' v={store.tableSort[a]} k={a} fieldName={tableHandle['schema'][a].label} onDel={this.tableAddSortWarper} />
+								})}
+								{Object.keys(store.tableFilter).map((a) => { return <TableFilterSortChip type='filter' v={store.tableFilter[a]} k={a} fieldName={tableHandle['schema'][a].label} onDel={this.tableAddFilterWarper} /> })}
+							</div>
+							<Measure bounds onResize={(contentRect) => {
+								store.setRowDimensions(contentRect.bounds.width, contentRect.bounds.height)
+							}}>
+								{({ measureRef }) => (
+									<div ref={measureRef} className="datatable_headerRow">
+										{store.isMultiSelect && <div style={fieldStyle.icon.header}></div>}
+										{store.tableView.map((a) => cellRenderer(true, tableHandle['schema'][a].label, tableHandle['view'][a], a+'_head', a, setTableMenu))}
+										{!store.isMultiSelect && <div style={fieldStyle.icon.header}></div>}
+									</div>
+								)}
+							</Measure>
+							<InfiniteLoader
+								isRowLoaded={({index}) => !!store.DBList[index]}
+								loadMoreRows={(start, stop) => store.addLimit()}
+								rowCount={store.DBList.length+1}
+								threshold={1}
+							>
+								{({ onRowsRendered, registerChild }) => (
+									<List
+										onRowsRendered={onRowsRendered}
+										noRowsRenderer={() => { <div>沒有相關記錄</div> }}
+										ref={(registerChild) => dataTable = registerChild}
+										width={Session.get("windowWidth")==undefined ? window.innerWidth-50: Session.get("windowWidth")-50}
+										height={Math.min(400, store.rowHeight*store.DBList.length)}
+										rowCount={store.DBList.length}
+										rowHeight={store.rowHeight}
+										rowRenderer={({ index, isScrolling, key, style }) => this.rowRenderer(({ index, isScrolling, key, style })) }
+									/>
+								)}
+							</InfiniteLoader>
+						</CardText>
+						<CardActions>
 
-								{store.enableMultiSelect && <RaisedButton label={"多選"+((store.isMultiSelect)? "("+(store.multiSelected.length)+")": "")} style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />}
+							{store.isMultiSelectEnabled && <RaisedButton label={"多選"+((store.isMultiSelect)? "("+(store.multiSelected.length)+")": "")} style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-list " />} onTouchTap={() => store.toggleMultiSelect()} />}
 
-								{store.isMultiSelect && <RaisedButton label="複數刪除" style={buttonStyle} secondary={true} icon={<FontIcon className="fa fa-trash-o" />} onTouchTap={() => this.deleteDoc(store.multiSelected.toJS())} />}
+							{store.isMultiSelect && store.allowMultiDelete && <RaisedButton label="複數刪除" style={buttonStyle} secondary={true} icon={<FontIcon className="fa fa-trash-o" />} onTouchTap={() => this.deleteDoc(store.multiSelected.toJS())} />}
 
-								{!store.isMultiSelect && store.enableNew && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
+							{!store.isMultiSelect && store.allowNewDoc && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
 
-								{!store.isMultiSelect && store.enableDownload && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => this.handleDownloadCSV(store.DBList)} />}
+							{!store.isMultiSelect && store.allowDownload && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => handleDownloadCSV(store.DBList, store.cardTitle)} />}
 
-								{!store.isMultiSelect && store.enableDownloadAll && <RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={() =>
-									this.handleDownloadCSVAll()
-								} />}
-							</CardActions>
-						</Card>
-					</div>
+							{!store.isMultiSelect && store.allowDownloadAll && <RaisedButton label={"下載所有記錄 ("+store.queryDocCount+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-cloud-download" />} onTouchTap={async () => {
+								a = await tableHandle['download'].callPromise({'query': store.DBListQuery, 'filter': store.tableFilter});
+								handleDownloadCSV(a, store.cardTitle);
+							}} />}
+						</CardActions>
+					</Card>
 				</div>
 				{/*Pop up menu for field sort/filter by clicking header start*/}
 				<Popover

@@ -306,7 +306,7 @@ let sync_DBList = null;
 		return (
 			<div className={rowClass} key={key} style={rowStyle}>
 				{store.isMultiSelect && checkBox}
-				{store.tableView.map((a, index) => this.cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index))}
+				{store.tableView.map((a, index) => this.cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index,a))}
 				{!store.isMultiSelect && <IconMenu
 					style={{height: '24px'}}
 					iconButtonElement={<IconButton style={fieldStyle.muiIconElement}><FontIcon className="fa fa-ellipsis-v" /></IconButton>}

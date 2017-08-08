@@ -3,12 +3,14 @@ import { Meteor } from 'meteor/meteor';
 import { observer } from "mobx-react";
 import mobx, { observable, useStrict, action, computed } from 'mobx';
 import { check } from 'meteor/check'
+import moment from 'moment';
 
 import TextField from 'material-ui/TextField';
 import RaisedButton from 'material-ui/RaisedButton';
 import DropDownMenu from 'material-ui/DropDownMenu';
 import MenuItem from 'material-ui/MenuItem';
 import Dialog from 'material-ui/Dialog';
+
 
 import { fieldStyle, comStyle, buttonStyle} from '../theme/ThemeSelector.js';
 
@@ -48,6 +50,7 @@ class Store {
 	}
 	@action checkFormAndConvert(type) {
 		let isCorrect = true;
+		console.log('checking,', type)
 		try {
 			switch(type) {
 				case 'sysID':
@@ -60,6 +63,7 @@ class Store {
 				case 'datetime':
 					isCorrect = moment(this.input, "YYYY-MM-DD").isValid();
 					if (isCorrect) { this.input = moment(this.input, "YYYY-MM-DD").toDate() }
+					break;
 				case 'status':
 				case 'currency':
 				case 'integer':
@@ -75,6 +79,7 @@ class Store {
 			}
 		}
 		catch(e) {
+			console.log(e)
 			this.inputError = '輸入錯誤, 請修改';
 			return;
 		}

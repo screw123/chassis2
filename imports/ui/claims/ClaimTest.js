@@ -3,6 +3,8 @@ import { Meteor } from 'meteor/meteor';
 import ReactDOM from 'react-dom';
 import { browserHistory, Link } from 'react-router';
 
+import FileSaver from 'file-saver';
+
 import { checkAuth } from '../../api/auth/CheckAuth.js';
 
 import DocList from '../component/DocList.js';
@@ -31,17 +33,20 @@ export default class ClaimTest extends Component {
 		const a = 1;
 		return (
 			<DocList
+				cardTitle='所有報銷'
 				table='claims'
-				query={'claims.ALL'}
+				query='claims.ALL'
 				rolesAllowed={['system.admin']}
 				includeFields={['docNum', 'userId', 'createAt']}
 				initLimit={10}
-				multiSelect={false}
-				enableDownload={false}
-				enableDownloadAll={false}
-				enableNew={false}
+				allowMultiSelect={false}
+				allowDownload={true}
+				allowDownloadAll={false}
+				allowNewDoc={true}
+				docLoadPath={''}
 
 			/>
 		)
 	}
 }
+//fixme to connect docLoadPath to claims/DocList to finish the testing part

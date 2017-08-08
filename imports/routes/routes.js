@@ -17,6 +17,7 @@ import AdminDocList from '../ui/admin/DocList.js'
 import AdminDocLoad from '../ui/admin/DocLoad.js'
 import AdminUserList from '../ui/admin/userList.js'
 import ClaimTest from '../ui/claims/ClaimTest.js'
+import DocLoad1 from '../ui/DocLoad/DocLoad1.js'
 
 import App from '../ui/App.js'
 
@@ -26,6 +27,7 @@ export const renderRoutes = () => (
     <Router history={browserHistory}>
         <Route path="/" component={App}>
             <IndexRoute component={Dashboard}/>
+            <Route path="DocLoad/:tableName/:mode(/:id)" component={DocLoad1} />
             <Route path="login" component={LoginPage}/>
             <Route path="signup" component={SignupPage}/>
             <Route path="dashboard" component={Dashboard}/>

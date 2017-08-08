@@ -13,8 +13,10 @@ export default class TableFilterSortChip extends Component {
 		if (this.props.v == undefined) { return <div></div> }
 		let value, opType, field;
 		field = this.props.k;
+
 		if (_.isObject(this.props.v)) {
 			opType = Object.keys(this.props.v)[0]
+			console.log('genFilterChip', _.isObject(this.props.v), this.props.v, opType)
 			if (opType == '$gte') { value= ">="+this.props.v[opType] }
 			else if (opType == '$lte') { value= "<="+this.props.v[opType] }
 			else if (opType == '$regex') { value= "="+this.props.v[opType] }

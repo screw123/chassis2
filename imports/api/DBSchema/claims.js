@@ -220,7 +220,9 @@ if (Meteor.isServer) {
 			let lim = 65535
 			if (args.limit === undefined) { }
 			else { lim = (args.limit > 65535) ? 65535 : args.limit }
+			console.log(args.filter)
 			const f = Object.assign({}, spec.filter, args.filter);
+			console.log(f, args.sort, lim);
 			return Claims.find(f, { sort: args.sort, limit: lim } );
 		});
 	});
