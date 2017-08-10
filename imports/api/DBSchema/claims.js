@@ -220,15 +220,17 @@ if (Meteor.isServer) {
 			let lim = 65535
 			if (args.limit === undefined) { }
 			else { lim = (args.limit > 65535) ? 65535 : args.limit }
-			console.log(args.filter)
 			const f = Object.assign({}, spec.filter, args.filter);
-			console.log(f, args.sort, lim);
 			return Claims.find(f, { sort: args.sort, limit: lim } );
 		});
 	});
 
-	Meteor.publish('claims.getClaim', function(docId) {
-		const d_cursor = Claims.find({_id: docId});
+	//this method need to be adjusted if it has userId as a field. fixme fix all existing schema
+	Meteor.publish('claims.getClaim', function({docId, filter}) {
+		let d_cursor;
+		if ((filter===undefined)||(filter===null)) { d_cursor = Claims.find({_id: docId}) }
+		else { d_cursor = Claims.find({_id: docId}, {fields: Object.assign({}, filter, {userId:1}) }) }
+
 		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
 		else {
 			const doc = d_cursor.fetch()[0];

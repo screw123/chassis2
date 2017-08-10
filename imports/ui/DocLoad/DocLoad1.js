@@ -49,6 +49,7 @@ import FilterDialog from '../component/FilterDialog.js';
 import { checkAuth } from '../../api/auth/CheckAuth.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
+import { } from '../component/DocLoadHelper.js';
 
 //Begin code
 let tableHandle;
@@ -706,7 +707,7 @@ const store = new Store();
 	}
 
 	render() {
-		let headerText = _.upperCase(store.mode + ' ' + store.table);
+		let headerText = _.upperCase(store.mode + ' 1 ' + store.table);
 		console.log(store.rowWidth, store.rowHeight);
 		if (store.mode=='error') {
 			this.props.setCommonDialogMsg("請求錯誤");

@@ -1,3 +1,10 @@
+//guidelines for creating tables schema
+//1. can only contain 1 subtable per schema
+//2. subtable cannot contain Dates
+//3. In each doc, "userId" is the owner of the document.
+//4. subline edit has to be full line.  Therefore subtable should be as slim as possible
+
+
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
 import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
 import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
