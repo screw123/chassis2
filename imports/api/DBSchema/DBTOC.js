@@ -3,6 +3,7 @@
 //2. subtable cannot contain Dates
 //3. In each doc, "userId" is the owner of the document.
 //4. subline edit has to be full line.  Therefore subtable should be as slim as possible
+//5. Adding autocomplete to DocLoad needs to also add the underlying 2 fields as well, they will be automatically hidden
 
 
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'

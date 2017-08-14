@@ -39,12 +39,12 @@ export const ClaimSchema = {
 	statusDesc: { type: String, label: '狀態內容' },
 	doc: { type: String, label: '上傳檔案', regEx: SimpleSchema.RegEx.Url},
 	content: { type: [Object], minCount: 1},
-	"content.$.sequence": { type: Number, label: '行序' },
+	"content.$.sequence": { type: Number, label: '行序', defaultValue: 1 },
 	"content.$.COAId": { type: String, label: '報銷科目ID', regEx: SimpleSchema.RegEx.Id },
 	"content.$.COADesc": { type: String, label: '報銷科目' },
 	"content.$.amt": { type: Number, decimal: true, label: '報銷金額', defaultValue: 0, min: 0 },
 	"content.$.EXCurrency": { type: String, label: '貨幣', min: 3, max: 3, optional: true },
-	"content.$.EXRate": {type: Number, decimal: true, label: '匯率', min: 0},
+	"content.$.EXRate": {type: Number, decimal: true, label: '匯率', min: 0, defaultValue: 1},
 	"content.$.EXAmt": { type: Number, decimal: true, label: '外幣金額', defaultValue: 0, min: 0 },
 	"content.$.Remarks": { type: String, label: '條目備注', optional: true }
 }

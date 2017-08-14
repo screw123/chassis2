@@ -111,7 +111,7 @@ const store = new Store();
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={['system.admin']}
-						includeFields={['docNum', 'userId', 'createAt', 'content.$.COAId']}
+						includeFields={['docNum', 'userId', 'userName', 'user', 'createAt', 'content.$.amt', 'content.$.COAId', 'content.$.COADesc', 'content.$.COA']}
 						docListPath={'/claims/ClaimTest/'}
 
 						setShowCommonDialog={this.props.setShowCommonDialog}
