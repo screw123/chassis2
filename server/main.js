@@ -5,6 +5,7 @@ import '../imports/api/auth/CheckAuth.js';
 
 import '../imports/api/DBSchema/business.js';
 import '../imports/api/DBSchema/claims.js';
+import '../imports/api/DBSchema/claimsHistory.js';
 import '../imports/api/DBSchema/COA.js';
 import '../imports/api/DBSchema/project.js';
 import '../imports/api/DBSchema/status.js';
@@ -17,7 +18,6 @@ _ = lodash;
 
 Meteor.startup(() => {
 	// code to run on server at startup
-
 	Meteor.publish('allRoles', function (){
   		return Roles.getAllRoles();
 	})

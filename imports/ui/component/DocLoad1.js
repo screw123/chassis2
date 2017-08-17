@@ -6,7 +6,7 @@
 //Basic React/Meteor/mobx import
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { Session } from 'meteor/session'
+import { Session } from 'meteor/session';
 import { browserHistory, Link } from 'react-router';
 import { observer } from "mobx-react";
 import mobx, { observable, useStrict, action } from 'mobx';
@@ -126,7 +126,6 @@ class Store {
 				break;
 			case 'edit':
 				this.mode = 'edit';
-				console.log('test fieldsToDBFilter', fieldsToDBFilter(fieldsToInclude))
 				this.loadDocHandler = Meteor.subscribe(tableHandle['singleDoc'], {docId: d, filter: fieldsToDBFilter(fieldsToInclude)}, {
 					onReady: () => { this.loadForm(d, fieldsToInclude) },
 					onStop: (e) => { console.log(e) }
@@ -209,7 +208,11 @@ class Store {
 					case 'integer':
 					case 'user':
 					case 'status':
+					case 'list':
 						updateVal(this.fieldsValue, this.fieldsErr, tableHandle['view'][v], v, doc[v], tableHandle);
+						break;
+					case 'array':
+						this.fieldsValue[v] = doc[v];
 						break;
 					default:
 						return undefined;
@@ -307,7 +310,9 @@ const store = new Store();
 	async handleSubmit(e) {
 		e.preventDefault();
 		store.submitting(true);
+		console.log('handleSubmit-1');
 		const authResult = await this.verifyUser();
+		console.log('handleSubmit-2');
 		//only check field error, ignore subTable, coz subTable input is only for adding lines.
 		if (Object.keys(store.fieldsErr).every((v) => store.fieldsErr[v]==='')) { }
 		else {
@@ -317,6 +322,7 @@ const store = new Store();
 		}
 		const fieldsValue = Object.assign({},store.fieldsValue)
 		const subTableValue = store.subTableLines.toJS()
+		console.log('handleSubmit-3');
 		//1. convert date from moment to Date()
 		store.fields.forEach((v)=>{
 			if ((v.type=='date')||(v.type=='datetime')) { fieldsValue[v.name] = fieldsValue[v.name].toDate() }
@@ -370,6 +376,7 @@ const store = new Store();
 			}
 		}
 		//convert subTable keys + insert into newDoc
+		console.log('handleSubmit.fieldsValue', fieldsValue)
 		let newDoc = Object.assign({}, fieldsValue);
 		if (subTableValue.length > 0) {
 			console.log('subTableValue.length', subTableValue.length)
@@ -390,8 +397,9 @@ const store = new Store();
 			let a = '';
 			if (store.mode=='new') { a = await tableHandle['new'].callPromise(newDoc) }
 			if (store.mode=='edit') {
-				const docId = newDoc['_id']
+				const docId = newDoc['_id'] //put _id as filter, and do not set it as update args
 				newDoc['_id'] = undefined
+				console.log('handleSubmit.edit', docId, newDoc)
 				a = await tableHandle['update'].callPromise({filter: {'_id': docId }, args: newDoc})
 			}
 			this.props.setSnackBarMsg('Save successful, return msg: '+ a);

@@ -28,6 +28,7 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'user':
 			case 'boolean':
 			case 'array':
+			case 'list':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
 					e.preventDefault();
 					funcTableMenu(true, e.currentTarget, field);
@@ -46,6 +47,7 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'url':
 			case 'text':
 			case 'longText':
+			case 'list':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;

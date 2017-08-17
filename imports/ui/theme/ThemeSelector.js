@@ -121,4 +121,8 @@ export const fieldStyle = {
 		header: {flex: '0 1 200px', height: '24px', overflow: 'hidden'},
 		content: {flex: '0 1 200px', height: '24px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}
 	},
+	list: {
+		header: {flex: '0 1 100px', height: '24px', overflow: 'hidden'},
+		content: {flex: '0 1 100px', height: '24px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}
+	},
 }

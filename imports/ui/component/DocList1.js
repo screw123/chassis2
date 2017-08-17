@@ -63,7 +63,7 @@ let tableHandle;
 class Store {
 	@observable table = '' //Table/collection that is currently loading, specify by URL param
 	@observable DBListQuery = '';
-	@observable rolesAllowed = ['system.admin'];
+	@observable rolesAllowed = [{role: 'admin', group: 'SYSTEM'}];
 	@observable queryDocCount = 0;
 	@observable DBList = []; //DB extract to show in table
 	@observable tableView = []; //View = what field to show in from DBList

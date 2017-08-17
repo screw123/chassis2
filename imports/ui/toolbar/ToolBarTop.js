@@ -15,14 +15,23 @@ import FontIcon from 'material-ui/FontIcon';
 import {List, ListItem} from 'material-ui/List';
 import Dialog from 'material-ui/Dialog';
 import RaisedButton from 'material-ui/RaisedButton';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 
 import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
-import { currentTheme, buttonStyle } from '../theme/ThemeSelector.js'
+import { currentTheme, buttonStyle } from '../theme/ThemeSelector.js';
+
+import { changeGroup } from '../../api/DBSchema/user.js';
 
 class Store {
+	@observable userGroup = '';
 	@observable drawerOpen = false;
 	@observable showLogoutDialog = false;
-	@action toggleDrawer() { this.drawerOpen = !this.drawerOpen }
+	@action updateUserGroup() { if (Meteor.user()===undefined) {} else { this.userGroup = Meteor.user().currentGroup } }
+	@action toggleDrawer() {
+		if (this.userGroup=='') { this.updateUserGroup(); }
+		this.drawerOpen = !this.drawerOpen;
+	}
 	@action toggleLogoutDialog() { this.showLogoutDialog = !this.showLogoutDialog }
 }
 const store = new Store()
@@ -52,17 +61,37 @@ const store = new Store()
 
 					<CardText style={{fontSize: '120%'}}>
 						<Avatar style={{backgroundColor: '#000000'}} icon={<FontIcon className="fa fa-user-o" />} />
-						{'  ' + 'Click to login'}
+						{'  ' + '點擊登入'}
 					</CardText>
 				</Card>
 			)
 		} else {
+
 			return (
 				<div>
-					<Card style={{backgroundColor: currentTheme.palette.accent1Color}} onTouchTap={()=> store.toggleLogoutDialog()}>
-						<CardText style={{fontSize: '120%'}}>
-							<Avatar style={{backgroundColor: '#000000'}}icon={<FontIcon className="fa fa-smile-o" />} />
-							{'  ' + Meteor.user().profile.lastName + ' ' + Meteor.user().profile.firstName}
+					<Card >
+						<CardHeader
+							title={'  ' + Meteor.user().profile.lastName + ' ' + Meteor.user().profile.firstName}
+							subtitle={store.userGroup}
+							avatar={<Avatar style={{backgroundColor: '#000000'}}icon={<FontIcon className="fa fa-smile-o" />} />}
+							actAsExpander={true}
+							showExpandableButton={true}
+							style={{backgroundColor: currentTheme.palette.accent1Color}}
+						/>
+						<CardText expandable={true}>
+							<SelectField
+								className="default-textField" maxHeight={200}
+								floatingLabelText="選擇公司"
+								value={store.userGroup}
+								onChange={async (e,i,v) => {
+									const a = await changeGroup.callPromise({id: Meteor.userId(), newGroup: v});
+									store.updateUserGroup();
+								}}
+							>
+								{Object.keys(Meteor.user().roles).map((v)=> <MenuItem value={v} primaryText={v} />)}
+							</SelectField>
+							<RaisedButton label="登出" className="button" primary={true} style={buttonStyle} onTouchTap={() => store.toggleLogoutDialog()} />
+							{}
 						</CardText>
 					</Card>
 					<Dialog
@@ -93,7 +122,7 @@ const store = new Store()
 					{this.genLoginCard()}
 					<List>
 						<ListItem onTouchTap={() => this.handleGoToPage("/dashboard")} primaryText="Dashboard" />
-						{Roles.userIsInRole(Meteor.userId(), 'system.admin') && <ListItem onTouchTap={() => this.handleGoToPage("/admin")} primaryText="Admin" />}
+						{Roles.userIsInRole(Meteor.userId(), 'admin', "SYSTEM") && <ListItem onTouchTap={() => this.handleGoToPage("/admin")} primaryText="Admin" />}
 						<ListItem primaryText="費用報銷" primaryTogglesNestedList={true} nestedItems={[
 							<ListItem onTouchTap={() => this.handleGoToPage("/claims/item/new")} primaryText="新增報銷" key={"menu_101"} />,
 							<ListItem onTouchTap={() => this.handleGoToPage("/claims/list/MyClaims")} primaryText="我的報銷" key={"menu_102"} />,

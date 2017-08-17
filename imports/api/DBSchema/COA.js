@@ -18,7 +18,7 @@ export const CoASchema = {
 	isActive: {type: Boolean, label: '使用中', defaultValue: true },
 	createAt: {type: Date, label: '創建日期', autoValue: function() {
 		const isActive = this.field('isActive');
-		if (this.isInsert || this.isUpsert || (isActive.isSet & (isActive.value == true) )) {
+		if (this.isInsert || (this.isUpdate && isActive.isSet && (isActive.value == true) )) {
 			return new Date();
 		} else {
 			this.unset();
@@ -31,9 +31,9 @@ export const CoAView = {
 	_id: 'sysID',
 	code: 'text',
   	desc: 'text',
-	acctType: 'text',
+	acctType: 'list',
 	isDebit: 'boolean',
-	subcat1: 'text',
+	subcat1: 'list',
 	subcat2: 'text',
 	isActive: 'boolean',
 	createAt: 'date',
@@ -50,7 +50,8 @@ export const newCoA = new ValidatedMethod({
 	name: 'CoA.newCoA',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -70,7 +71,8 @@ export const updateCoA = new ValidatedMethod({
 	name: 'CoA.updateCoA',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -78,6 +80,7 @@ export const updateCoA = new ValidatedMethod({
 	run({filter, args}) {
 		if (Meteor.isServer) {
 			try {
+				console.log(filter, args)
 				const a = CoA.update(filter, {$set: args});
 				return '更新了'+a+'張文件';
 			}
@@ -90,7 +93,8 @@ export const deleteCoA = new ValidatedMethod({
 	name: 'CoA.deleteCoA',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -109,6 +113,11 @@ export const deleteCoA = new ValidatedMethod({
 export const downloadCoA = new ValidatedMethod({
 	name: 'CoA.downloadCoA',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['admin'],
+		group: 'SYSTEM',
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
 	validate() {},
 	run({query, filter}) {
@@ -122,6 +131,11 @@ export const downloadCoA = new ValidatedMethod({
 export const qtyCoA = new ValidatedMethod({
 	name: 'CoA.qtyCoA',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['admin'],
+		group: 'SYSTEM',
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
 	validate() {},
 	run({query, filter}) {
@@ -143,9 +157,12 @@ if (Meteor.isServer) {
 		});
 	});
 
-	Meteor.publish('CoA.getCoA', function(docId) {
-		const d_cursor = CoA.find({_id: docId});
-		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
+	Meteor.publish('CoA.getCoA', function({docId, filter}) {
+		let d_cursor;
+		if ((filter===undefined)||(filter===null)) { d_cursor = CoA.find({_id: docId}) }
+		else { d_cursor = CoA.find({_id: docId}, {fields: filter}) }
+
+		if (Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) { return d_cursor }
 		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ CoA.getCoA, requester: '+this.userId) }
 	});
 }

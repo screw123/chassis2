@@ -62,11 +62,9 @@ export const deleteClaimsHistory = new ValidatedMethod({
 	name: 'ClaimsHistory.delete',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
-		rolesError: {
-			error: 'accessDenied',
-			message: '用戶權限不足'
-		}
+		roles: ['admin'],
+		group: 'SYSTEM',
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
@@ -128,9 +126,9 @@ if (Meteor.isServer) {
 		});
 	});
 
-	Meteor.publish('ClaimsHistory.getClaimsHistory', function(docId) {
+	Meteor.publish('ClaimsHistory.getClaimsHistory', function(docId) { //this requires admin, because this method only for use in editing document.  Only admin can edit history.
 		const d_cursor = ClaimsHistory.find({_id: docId});
-		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
+		if (Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) { return d_cursor }
 		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ ClaimsHistory.getClaimsHistory, requester: '+this.userId) }
 	});
 }

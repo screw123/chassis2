@@ -14,6 +14,8 @@ import Dialog from 'material-ui/Dialog';
 import Checkbox from 'material-ui/Checkbox';
 import DatePicker from 'material-ui/DatePicker';
 import TimePicker from 'material-ui/TimePicker';
+import SelectField from 'material-ui/SelectField';
+import MenuItem from 'material-ui/MenuItem';
 
 import { fieldStyle, comStyle } from '../theme/ThemeSelector.js';
 
@@ -29,7 +31,10 @@ export const getDefaultValue = (v)  => {
 		case 'text':
 		case 'longText':
 		case 'user':
+		case 'list':
 			return '';
+		case 'array':
+			return [];
 		case 'numID':
 		case 'currency':
 		case 'integer':
@@ -85,6 +90,7 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 		case 'text':
 		case 'longText':
 		case 'user':
+		case 'list':
 			fieldStore[fieldName] = v;
 			break;
 		case 'numID':
@@ -242,6 +248,16 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			return (
 				<Checkbox disabled={mode=='view'} name={f.name} label={tableHandle.schema[f.name].label} checked={valStore[f.name]} style={comStyle} onCheck={(e, isInputChecked) => updateVal(valStore, errStore, f.type, f.name, isInputChecked, tableHandle)}/>
 			)
+		case 'list':
+			return (
+				<SelectField className="default-textField" value={valStore[f.name]} onChange={(e, i, payload) => updateVal(valStore, errStore, f.type, f.name, payload, tableHandle)} name={f.name} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} errorText={errStore[f.name]} menuStyle={comStyle} listStyle={comStyle} maxHeight={200}>
+					{tableHandle.schema[f.name].allowedValues.map((v)=> {
+						return <MenuItem value={v} primaryText={v} />
+					})}
+				</SelectField>
+			)
+		case 'array':
+			<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
 		default:
 			return 'Error: FIELDVIEW UNKNOWN'
 	}
@@ -274,6 +290,8 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 			case 'user':
 			case 'url':
 			case 'boolean':
+			case 'list':
+			case 'array':
 				return <div key={key} style={fieldStyle[fieldView][contentType]}> { value } </div>;
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;
@@ -286,7 +304,7 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 			case 'numID':
 			case 'integer':
 			case 'decimal':
-
+			case 'list':
 			case 'text':
 			case 'longText':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
@@ -308,6 +326,8 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 				let v = ''
 				if ((typeof value)==='Object') { v = value.name.substring(0,9) + "..." }
 				return <div key={key} style={fieldStyle[fieldView][contentType]}> { v } </div>;
+			case 'array':
+				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.join(";") } </div>;
 			default:
 				return 'Error: fieldView unknown';
 		}

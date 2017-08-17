@@ -18,8 +18,8 @@ export const checkAuth = (roles) => {
 			const uid = Meteor.userId();
 			const u = await getCurrentUser.callPromise();
 			if (!uid) { return reject("請先登入.") }
-			_.each(roles, function(role) {
-				if (!Roles.userIsInRole(u, role)) { return reject("用戶沒有相關權限.") }
+			_.each(roles, function(v) {
+				if (!Roles.userIsInRole(u, v.role, v.group)) { return reject("用戶沒有相關權限.") }
 			})
 			if (!u.isActive) { return reject("用戶已停用.") }
 			return resolve(true);

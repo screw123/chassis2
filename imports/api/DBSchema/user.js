@@ -1,13 +1,13 @@
 import { Mongo } from 'meteor/mongo';
 import { Meteor } from 'meteor/meteor';
-import { Accounts } from 'meteor/accounts-base'
+import { Accounts } from 'meteor/accounts-base';
 
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
 
 import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 
-// This is not a standard Schema/method page, but a dummy page for use together with the admin List/load engine
+// This is not a standard Schema/method page
 
 if (Meteor.isServer) {
 	Meteor.publish('user.profile', function a() {
@@ -20,6 +20,7 @@ if (Meteor.isServer) {
 	});
 }
 
+//This mainly for use with autocomplete
 export const userList = new ValidatedMethod({
 	name: 'user.list',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
@@ -64,7 +65,8 @@ export const updateRole = new ValidatedMethod({
 	name: 'user.updateRole',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: {
@@ -118,6 +120,24 @@ export const resetPassword = new ValidatedMethod({
 					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to reset password.') }
 				}
 				Accounts.setPassword(id, password, true);
+			}
+			catch(err) { throw new Meteor.Error('update-failed', err.message) }
+		}
+	}
+});
+
+export const changeGroup = new ValidatedMethod({
+	name: 'user.changeGroup',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate() { },
+	run({id, newGroup}) {
+		if (Meteor.isServer) {
+			try {
+				Meteor.users.update({_id: id}, {$set: {currentGroup: newGroup}});
 			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
 		}

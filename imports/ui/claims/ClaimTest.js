@@ -87,10 +87,10 @@ const store = new Store();
 				{(store.mode=='docList') &&
 					<DocList1
 						cardTitle='所有報銷'
-						table='claims'
-						query='claims.ALL'
+						table='CoA'
+						query='CoA.ALL'
 						rolesAllowed={['system.admin']}
-						includeFields={['docNum', 'userId', 'createAt']}
+						includeFields={['code', 'desc', 'acctType', 'isDebit', 'subcat1']}
 						initLimit={10}
 						allowMultiSelect={false}
 						allowDownload={true}
@@ -111,7 +111,7 @@ const store = new Store();
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={['system.admin']}
-						includeFields={['docNum', 'userId', 'userName', 'user', 'createAt', 'content.$.amt', 'content.$.COAId', 'content.$.COADesc', 'content.$.COA']}
+						includeFields={['code', 'desc', 'acctType', 'isDebit', 'subcat1']}
 						docListPath={'/claims/ClaimTest/'}
 
 						setShowCommonDialog={this.props.setShowCommonDialog}

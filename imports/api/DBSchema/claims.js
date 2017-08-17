@@ -96,13 +96,6 @@ Claims.attachSchema(new SimpleSchema(ClaimSchema));
 export const newClaim = new ValidatedMethod({
 	name: 'Claims.newClaim',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
-	checkRoles: {
-		roles: ['staff.general'],
-		rolesError: {
-			error: 'accessDenied',
-			message: '用戶權限不足'
-		}
-	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
@@ -111,7 +104,7 @@ export const newClaim = new ValidatedMethod({
 	 },
 	run(args) {
 		if (Meteor.isServer) {
-
+			//fixme check if user belongs to the organization he is claiming to
 			docNum = nextAutoincrement();
 			const d = JSON.parse(JSON.stringify(Object.assign({}, args, {'docNum': docNum})));
 			try {
@@ -129,13 +122,6 @@ export const newClaim = new ValidatedMethod({
 export const updateClaim = new ValidatedMethod({
 	name: 'Claims.updateClaim',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
-	checkRoles: {
-		roles: ['staff.general'],
-		rolesError: {
-			error: 'accessDenied',
-			message: '用戶權限不足'
-		}
-	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
@@ -144,6 +130,7 @@ export const updateClaim = new ValidatedMethod({
 	run({filter, args}) {
 		if (Meteor.isServer) {
 			try {
+				//fixme check if admin or "boss of this org", allow update, or if claim user himself.  otherwise raise error
 				const a = Claims.update(filter, {$set: args});
 				return '更新了'+a+'張文件';
 			}
@@ -152,15 +139,13 @@ export const updateClaim = new ValidatedMethod({
 	}
 });
 
-export const deleteClaim = new ValidatedMethod({
+export const deleteClaim = new ValidatedMethod({ //only admin can delete doc
 	name: 'Claims.deleteClaim',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
-		rolesError: {
-			error: 'accessDenied',
-			message: '用戶權限不足'
-		}
+		roles: ['admin'],
+		group: 'SYSTEM',
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
@@ -231,7 +216,7 @@ if (Meteor.isServer) {
 		if ((filter===undefined)||(filter===null)) { d_cursor = Claims.find({_id: docId}) }
 		else { d_cursor = Claims.find({_id: docId}, {fields: Object.assign({}, filter, {userId:1}) }) }
 
-		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
+		if (Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) { return d_cursor }
 		else {
 			const doc = d_cursor.fetch()[0];
 			if (this.userId == doc.userId) { return d_cursor }

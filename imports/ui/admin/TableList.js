@@ -45,7 +45,7 @@ const store = new Store();
 	}
 
 	async componentWillMount() {
-		const a = await this.verifyUser(['system.admin']);
+		const a = await this.verifyUser([{role: 'admin', group: 'SYSTEM'}]);
 	}
 
 	componentWillUnmount() {

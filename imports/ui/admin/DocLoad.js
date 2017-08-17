@@ -1,7 +1,7 @@
 //Basic React/Meteor/mobx import
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { Session } from 'meteor/session'
+import { Session } from 'meteor/session';
 import { browserHistory, Link } from 'react-router';
 import { observer } from "mobx-react";
 import mobx, { observable, useStrict, action } from 'mobx';

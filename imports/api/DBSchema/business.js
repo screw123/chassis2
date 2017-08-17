@@ -42,7 +42,8 @@ export const newBusiness = new ValidatedMethod({
 	name: 'Business.newBusiness',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -62,7 +63,8 @@ export const updateBusiness = new ValidatedMethod({
 	name: 'Business.updateBusiness',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -82,7 +84,8 @@ export const deleteBusiness = new ValidatedMethod({
 	name: 'Business.deleteBusiness',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
-		roles: ['system.admin'],
+		roles: ['admin'],
+		group: 'SYSTEM',
 		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 	},
 	checkLoggedInError: { error: 'notLoggedIn', message: '用戶未有登入'},
@@ -137,7 +140,7 @@ if (Meteor.isServer) {
 
 	Meteor.publish('business.getBusiness', function(docId) {
 		const d_cursor = Business.find({_id: docId});
-		if (Roles.userIsInRole(this.userId, 'system.admin')) { return d_cursor }
+		if (Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) { return d_cursor }
 		else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ business.getBusiness, requester: '+this.userId) }
 	});
 }

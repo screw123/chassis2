@@ -35,3 +35,4 @@ didericis:callpromise-mixin
 harrison:papa-parse
 mizzao:user-status
 dynamic-import
+session
