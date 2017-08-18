@@ -31,7 +31,11 @@ class Store {
 			case 'sysID':
 			case 'text':
 			case 'longText':
+			case 'foreignList':
+			case 'list':
+			case 'array':
 			case 'user':
+			case 'roles':
 				return '輸入字串, 如: abc'
 			case 'date':
 			case 'datetime':
@@ -56,6 +60,10 @@ class Store {
 				case 'sysID':
 				case 'text':
 				case 'longText':
+				case 'list':
+				case 'foreignList':
+				case 'array':
+				case 'roles':
 				case 'user':
 					check(this.input, String);
 					break;
@@ -120,6 +128,10 @@ const store = new Store();
 			case 'text':
 			case 'longText':
 			case 'user':
+			case 'list':
+			case 'foreignList':
+			case 'array':
+			case 'roles':
 				three = true;
 				four = true;
 				break;

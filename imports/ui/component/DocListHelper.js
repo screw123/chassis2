@@ -9,6 +9,7 @@ import moment from 'moment';
 import accounting from 'accounting';
 
 import { tableStyle, fieldStyle, comStyle, buttonStyle} from '../theme/ThemeSelector.js';
+import { userRole2Str } from '../../api/helper.js'
 
 export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMenu) => {
 	const contentType = (isHeader)?'header':'content'
@@ -29,6 +30,8 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'boolean':
 			case 'array':
 			case 'list':
+			case 'roles':
+			case 'foreignList':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
 					e.preventDefault();
 					funcTableMenu(true, e.currentTarget, field);
@@ -48,6 +51,7 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'text':
 			case 'longText':
 			case 'list':
+			case 'foreignList':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;
@@ -65,6 +69,8 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 				return <div key={key} style={fieldStyle[fieldView][contentType]} >{(value)? <FontIcon className="fa fa-check" /> : <FontIcon className="fa fa-times" />}</div>;
 			case 'array':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.toString() } </div>;
+			case 'roles': //roles is object of arrays
+				return <div key={key} style={fieldStyle[fieldView][contentType]} > { userRole2Str(value) } </div>;
 			default:
 				return 'Error: fieldView unknown';
 		}

@@ -12,6 +12,7 @@ export const ClaimSchema = {
 	docNum: {type: Number, label: '單號', unique: true, optional: true},
   	userId: {type: String, label: '用戶', regEx: SimpleSchema.RegEx.Id},
 	userName: {type: String, label: '用戶名稱'},
+	organization: {type: String, label: '所屬公司', min: 1},
 	claimDate: {type: Date, label: '單據日期'},
 	createAt: {type: Date, label: '報銷日期', optional: true, autoValue: function() {
 		if (this.isInsert) {
@@ -54,26 +55,27 @@ export const ClaimsView = {
 	'docNum': 'numID',
 	'userId': 'user',
 	'userName': 'text',
-	'user': {key: 'userName', value: 'userId', 'link': { 'q': 'user.list', 'text': "userName", "value": "_id" } },
+	'user': {type: 'autocomplete', key: 'userName', value: 'userId', 'link': { 'q': 'user.list', 'text': "userName", "value": "_id" } },
+	'organization': 'foreignList',
 	'claimDate': 'date',
 	'createAt': 'date',
 	'lastUpdate': 'datetime',
 	'projectId': 'sysID',
 	'projectCode': 'text',
-	'project': {key: 'projectCode', value: 'projectId', 'link': { 'q': 'project.list', 'text': "code", "value": "_id" } },
+	'project': {type: 'autocomplete', key: 'projectCode', value: 'projectId', 'link': { 'q': 'project.list', 'text': "code", "value": "_id" } },
 	'businessId': 'sysID',
 	'businessCode': 'text',
-	'business': {key: 'businessCode', value: 'businessId', 'link': { 'q': 'business.list', 'text': "code", "value": "_id" }},
+	'business': {type: 'autocomplete', key: 'businessCode', value: 'businessId', 'link': { 'q': 'business.list', 'text': "code", "value": "_id" }},
 	'claimDesc': 'longText',
 	'totalClaimAmt': 'currency',
 	'statusCode': 'status',
 	'statusDesc': 'text',
-	'status': {key: 'statusDesc', value: 'statusCode', 'link': { 'q': 'status.list', 'text': "desc", "value": "code" }},
+	'status': {type: 'autocomplete', key: 'statusDesc', value: 'statusCode', 'link': { 'q': 'status.list', 'text': "desc", "value": "code" }},
 	'doc': 'url',
 	'content.$.sequence': 'numID',
 	'content.$.COAId': 'sysID',
 	'content.$.COADesc': 'longText',
-	'content.$.COA': {key: 'content.$.COADesc', value: 'content.$.COAId', link: { 'q': 'CoA.list', 'text': "name", "value": "_id" }},
+	'content.$.COA': {type: 'autocomplete', key: 'content.$.COADesc', value: 'content.$.COAId', link: { 'q': 'CoA.list', 'text': "name", "value": "_id" }},
 	'content.$.amt': 'currency',
 	'content.$.EXCurrency': 'text',
 	'content.$.EXRate': 'decimal',
@@ -202,7 +204,7 @@ if (Meteor.isServer) {
 	publishSpec.forEach((spec) => { //publish all publishSpec
 		Meteor.publish(spec.name, function(args) {
 			if (Object.keys(spec.filter).includes('userId')) { spec.filter['userId'] = this.userId } //Assume if filter contains userId, it must be filter by this.userId.  Change if needed
-			let lim = 65535
+			let lim = 65535;
 			if (args.limit === undefined) { }
 			else { lim = (args.limit > 65535) ? 65535 : args.limit }
 			const f = Object.assign({}, spec.filter, args.filter);

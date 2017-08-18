@@ -42,6 +42,7 @@ import { checkAuth } from '../../api/auth/CheckAuth.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
 import { updateProfile, updateRole, updateEmail, resetPassword } from '../../api/DBSchema/user.js';
+import { userRole2Str } from '../../api/helper.js'
 
 //Begin code
 let dataTable;
@@ -64,7 +65,7 @@ let tableHandle = {
 				"profile.firstName": 'text',
 				"profile.lastName": 'text',
 				"profile.slackUserName": 'text',
-				"roles": 'array',
+				"roles": 'roles',
 				"createdAt": 'datetime',
 				"isActive": 'boolean'
 			},
@@ -88,7 +89,7 @@ let tableHandle = {
 class Store {
 	@observable table = '' //Table/collection that is currently loading, specify by URL param
 	@observable DBListQuery = '';
-	@observable rolesAllowed = ['system.admin'];
+	@observable rolesAllowed = [{role: 'admin', group: 'SYSTEM'}];
 	@observable queryDocCount = 0;
 	@observable DBList = [];
 	@observable tableView = []; //View = what field to show in from DBList
@@ -221,6 +222,7 @@ let sync_DBList = null;
 				case 'user':
 				case 'boolean':
 				case 'array':
+				case 'roles':
 					return <div key={key} style={fieldStyle[fieldView][contentType]}> { value } </div>;
 				case 'icon':
 					return <div> Error: please manually handle icons </div>;
@@ -253,6 +255,8 @@ let sync_DBList = null;
 					return <div key={key} style={fieldStyle[fieldView][contentType]} >{(value)? <FontIcon className="fa fa-check" /> : <FontIcon className="fa fa-times" />}</div>;
 				case 'array':
 					return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.toJS().toString() } </div>;
+				case 'roles': //roles is object of arrays
+					return <div key={key} style={fieldStyle[fieldView][contentType]} > { userRole2Str(value) } </div>;
 				default:
 					return 'Error: fieldView unknown';
 			}

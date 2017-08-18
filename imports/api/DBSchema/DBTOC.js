@@ -7,13 +7,18 @@
 
 
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
-import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
-import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
 
 import Claims, {ClaimSchema, ClaimsView, newClaim, updateClaim, deleteClaim, downloadClaim, qtyClaim} from './claims.js';
+
 import ClaimsHistory, {ClaimsHistorySchema, ClaimsHistoryView, newClaimsHistory, deleteClaimsHistory, downloadClaimsHistory, qtyClaimsHistory} from './claimsHistory.js'
 
 import CoA, {CoASchema, CoAView, newCoA, updateCoA, deleteCoA, downloadCoA, qtyCoA} from './COA.js'
+
+import OrgRole, {OrgRoleSchema, OrgRoleView, newOrgRole, updateOrgRole, deleteOrgRole, downloadOrgRole, qtyOrgRole} from './OrgRole.js'
+
+import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
+
+import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
 
 export const tableHandles = (c) => {
 	switch(c) {
@@ -64,6 +69,18 @@ export const tableHandles = (c) => {
 				'download': downloadCoA,
 				'count': qtyCoA,
 				'singleDoc': 'CoA.getCoA'
+			};
+		case 'OrgRole':
+			return {
+				'main': OrgRole,
+				'schema': Object.assign({}, OrgRoleSchema, {'_id': {label: 'ID'}}),
+				'view': OrgRoleView,
+				'new': newOrgRole,
+				'update': updateOrgRole,
+				'delete': deleteOrgRole,
+				'download': downloadOrgRole,
+				'count': qtyOrgRole,
+				'singleDoc': 'OrgRole.getOrgRole'
 			};
 		case 'project':
 			return {

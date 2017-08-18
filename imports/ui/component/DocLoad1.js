@@ -66,7 +66,8 @@ class Store {
 		this.rowHeight=h;
 	 }
 
-	@action changeDoc(t, m, d, includeFields) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
+	@action changeDoc(t, m, d, includeFields, providedLookupList) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
+		console.log('changeDoc.providedLookupList', providedLookupList)
 		this.table = t;
 		this.mode = m;
 
@@ -85,6 +86,7 @@ class Store {
 		fieldsToInclude.forEach((v) => {
 			if (v.includes('.$.')) { //subtable
 				if (_.isPlainObject(tableHandle['view'][v])) {
+					let type = tableHandle['view'][v][type];
 					subTableFields.push({name: v, type: 'autocomplete'})
 					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['key']}) - 1, 1)
 					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['value']}) - 1, 1)
@@ -93,7 +95,7 @@ class Store {
 					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
 						if (error) { console.log('store.changeDoc.createFieldList.subtable',error) }
 						else {this.updateLookupList(v, result) }
-					})
+					});
 				}
 				else { subTableFields.push({name: v, type: tableHandle['view'][v]}) }
 			}
@@ -105,14 +107,18 @@ class Store {
 					lookupList[v] = [];
 					searchText[v] = '';
 					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
-						if (error) { console.log('store.changeDoc.createFieldList.maintable',error) }
-						else {this.updateLookupList(v, result)}
-					})
+						if (error) { console.log('store.changeDoc.createFieldList.table',error) }
+						else {this.updateLookupList(v, result) }
+					});
 				}
 				else { fields.push({name: v, type: tableHandle['view'][v]}) }
 			}
+			if (tableHandle['view'][v]=='foreignList') {
+				lookupList[v] = [];
+				this.updateLookupList(v, providedLookupList[v])
+				searchText[v] = '';
+			}
 		});
-		console.log(fields, subTableFields)
 		this.fields = fields;
 		this.subTableFields = subTableFields;
 		this.initForm();
@@ -175,6 +181,8 @@ class Store {
 			return;
 		}
 
+		console.log('store.loadForm.doc', doc)
+
 		Object.keys(doc).forEach((v)=> {
 			//object in document can be plain value or object, object can be date or subTable
 			if (doc[v] instanceof Date) {
@@ -209,6 +217,7 @@ class Store {
 					case 'user':
 					case 'status':
 					case 'list':
+					case 'foreignList':
 						updateVal(this.fieldsValue, this.fieldsErr, tableHandle['view'][v], v, doc[v], tableHandle);
 						break;
 					case 'array':
@@ -223,6 +232,15 @@ class Store {
 		//loop autocomplete and convert them for UI
 		this.fields.filter((v)=> { return v.type==='autocomplete' }).forEach((v)=> {
 			this.searchText[v.name] = this.fieldsValue[tableHandle['view'][v.name]['key']]
+		})
+		this.subTableFields.filter((v)=> { return v.type==='autocomplete' }).forEach((v)=> {
+			this.searchText[v.name] = this.subTableFieldsValue[tableHandle['view'][v.name]['key']]
+		})
+		this.fields.filter((v)=> { return v.type==='foreignList' }).forEach((v)=> {
+			this.searchText[v.name] = this.fieldsValue[v.name]
+		})
+		this.subTableFields.filter((v)=> { return v.type==='foreignList' }).forEach((v)=> {
+			this.searchText[v.name] = this.subTableFieldsValue[v.name]
 		})
 		this.loadDocHandler.stop();
 		console.log(doc);
@@ -267,7 +285,7 @@ const store = new Store();
 			this.props.setShowCommonDialog(true);
 		}
 		//prep the whole form. will handle error mode by re-direct to /404
-		store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields);
+		store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList);
 	}
 
 	async componentWillReceiveProps(nextProps) {
@@ -281,7 +299,7 @@ const store = new Store();
 			this.props.setShowCommonDialog(true);
 		}
 		//prep the whole form. will handle error mode by re-direct to /404
-		store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, this.props.includeFields);
+		store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextprops.providedLookupList);
 	}
 
 	subTableRowRenderer({ index, isScrolling, key, style }) {

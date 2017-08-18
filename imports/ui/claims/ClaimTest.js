@@ -13,6 +13,8 @@ import { checkAuth } from '../../api/auth/CheckAuth.js';
 import DocList1 from '../component/DocList1.js';
 import DocLoad1 from '../component/DocLoad1.js';
 
+import { getUserOrg } from '../../api/DBSchema/user.js'
+
 class Store {
 	allowedModes = [undefined, 'new', 'view', 'edit'];
 	table = 'claims';
@@ -20,6 +22,9 @@ class Store {
 	@observable docMode = ''; //control new/edit/view/etc in doc mode
 	@observable table = '';
 	@observable docId = '';
+	@observable lookupList = {};
+
+	@action updatelookupList() { this.lookupList = {organization: getUserOrg.callPromise(Meteor.userId())} }
 
 	@action setMode(docMode, table, id) {
 		switch(docMode) {
@@ -81,16 +86,26 @@ const store = new Store();
 		}
 	}
 
+	async getLookupList() {
+		try {
+			const a = await getUserOrg.callPromise(Meteor.userId());
+			console.log(a)
+			return a
+		} catch(err) { console.log(err)}
+
+	}
+
 	render() {
+		store.updatelookupList()
 		return (
 			<div>
 				{(store.mode=='docList') &&
 					<DocList1
 						cardTitle='所有報銷'
-						table='CoA'
-						query='CoA.ALL'
-						rolesAllowed={['system.admin']}
-						includeFields={['code', 'desc', 'acctType', 'isDebit', 'subcat1']}
+						table='claims'
+						query='claims.ALL'
+						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
+						includeFields={['docNum', 'organization', 'totalClaimAmt', 'claimDesc']}
 						initLimit={10}
 						allowMultiSelect={false}
 						allowDownload={true}
@@ -106,14 +121,13 @@ const store = new Store();
 				}
 				{(store.mode=='docLoad') &&
 					<DocLoad1
-
 						table={store.table}
 						mode={store.docMode}
 						docId={store.docId}
-						rolesAllowed={['system.admin']}
-						includeFields={['code', 'desc', 'acctType', 'isDebit', 'subcat1']}
+						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
+						includeFields={['docNum', 'organization', 'totalClaimAmt', 'claimDesc']}
+						providedLookupList={store.lookupList}
 						docListPath={'/claims/ClaimTest/'}
-
 						setShowCommonDialog={this.props.setShowCommonDialog}
 						setCommonDialogMsg={this.props.setCommonDialogMsg}
 						setShowSnackBar={this.props.setShowSnackBar}

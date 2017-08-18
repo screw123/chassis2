@@ -18,6 +18,7 @@ import SelectField from 'material-ui/SelectField';
 import MenuItem from 'material-ui/MenuItem';
 
 import { fieldStyle, comStyle } from '../theme/ThemeSelector.js';
+import { userRole2Str } from '../../api/helper.js'
 
 export const getDefaultValue = (v)  => {
 	//autocomplete will always be undefined, all read/write are targeting the linked values
@@ -32,6 +33,8 @@ export const getDefaultValue = (v)  => {
 		case 'longText':
 		case 'user':
 		case 'list':
+		case 'foreignList':
+		case 'roles':
 			return '';
 		case 'array':
 			return [];
@@ -91,6 +94,8 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 		case 'longText':
 		case 'user':
 		case 'list':
+		case 'foreignList':
+		case 'roles':
 			fieldStore[fieldName] = v;
 			break;
 		case 'numID':
@@ -156,6 +161,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			);
 		case 'sysID':
 		case 'text':
+		console.log(f.name, valStore[f.name], tableHandle.schema[f.name].label, valStore, errStore, f.type, f.name, tableHandle, errStore[f.name])
 			return (
 				<TextField disabled={mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
@@ -226,7 +232,6 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			);
 		case 'status':
 		case 'autocomplete':
-			console.log('fieldRenderer', f, searchText, lookupList)
 			return (
 				<AutoComplete disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[tableHandle.view[f.name].key].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
 					style={comStyle} menuStyle={comStyle} listStyle={comStyle}
@@ -258,6 +263,32 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			)
 		case 'array':
 			<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
+		case 'foreignList':
+		console.log('foreignList', lookupList[f.name])
+			if ((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)){
+				fieldRenderer({name: f.name, type: 'text'}, valStore, errStore, tableHandle, mode, searchText, lookupList);
+				break;
+			}
+			else {
+				return (
+					<AutoComplete disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
+						style={comStyle} menuStyle={comStyle} listStyle={comStyle}
+						value={valStore[f.name]}
+						searchText={searchText[f.name]}
+						dataSource={lookupList[f.name].toJS()}
+						ref={"foreignList_"+f.name}
+						onNewRequest={(v, i) => {
+							if (i==-1) { }
+							updateVal(valStore, errStore, f.type, f.name, v, tableHandle)
+						}}
+						errorText={errStore[f.name]}
+					/>
+				);
+			}
+		case 'roles':
+			return (
+				'roles'
+			)
 		default:
 			return 'Error: FIELDVIEW UNKNOWN'
 	}
@@ -292,6 +323,8 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 			case 'boolean':
 			case 'list':
 			case 'array':
+			case 'foreignList':
+			case 'roles':
 				return <div key={key} style={fieldStyle[fieldView][contentType]}> { value } </div>;
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;
@@ -307,6 +340,7 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 			case 'list':
 			case 'text':
 			case 'longText':
+			case 'foreignList':
 				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;
@@ -327,7 +361,9 @@ export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
 				if ((typeof value)==='Object') { v = value.name.substring(0,9) + "..." }
 				return <div key={key} style={fieldStyle[fieldView][contentType]}> { v } </div>;
 			case 'array':
-				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.join(";") } </div>;
+				return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.toString() } </div>;
+			case 'roles': //roles is object of arrays
+				return <div key={key} style={fieldStyle[fieldView][contentType]} > { userRole2Str(value) } </div>;
 			default:
 				return 'Error: fieldView unknown';
 		}

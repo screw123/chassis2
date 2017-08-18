@@ -144,4 +144,27 @@ export const changeGroup = new ValidatedMethod({
 	}
 });
 
+export const getUserOrg = new ValidatedMethod({
+	name: 'user.getUserOrg',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate() { },
+	run(id) {
+		if (Meteor.isServer) {
+			try {
+				let uid = '';
+				if (id === undefined) { uid = this.userId }
+				else { uid = id }
+				
+				const a = Meteor.users.findOne({_id: id} ,{filter: {roles: 1}});
+				return Object.keys(a.roles);
+			}
+			catch(err) { throw new Meteor.Error('get-failed', err.message) }
+		}
+	}
+});
+
 export default u = '';

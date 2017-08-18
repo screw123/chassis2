@@ -6,3 +6,14 @@ export const cleanObject = (obj) => {
 	});
 	return a;
 };
+
+export const userRole2Str = (r) => {
+	let a = '';
+	for (v in r) { //v is org name
+		for (x of r[v]) { //x is role name
+			a = a + x + "@" + v + "; "
+			console.log(r, a)
+		}
+	}
+	return a;
+}
