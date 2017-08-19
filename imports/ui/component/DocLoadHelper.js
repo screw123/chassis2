@@ -73,7 +73,6 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 		case 'sysID':
 			break; //does not allow change of sysID
 		case 'url':
-			console.log(Object.keys(v));
 			if (v.type == 'application/pdf') {
 				//if isPDF then put object into store
 				fieldStore[fieldName] = v;
@@ -124,7 +123,6 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 			return undefined;
 	}
 })
-
 export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchText, lookupList) => {
 	switch(f.type) {
 		case 'date':
@@ -161,9 +159,8 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			);
 		case 'sysID':
 		case 'text':
-		console.log(f.name, valStore[f.name], tableHandle.schema[f.name].label, valStore, errStore, f.type, f.name, tableHandle, errStore[f.name])
 			return (
-				<TextField disabled={mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
+				<TextField disabled={mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
 		case 'url':
 			if (_.isObject(valStore[f.name])) { //File/blob, i.e. user just selected it from local.  In this case we only use url not a
@@ -264,10 +261,8 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 		case 'array':
 			<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
 		case 'foreignList':
-		console.log('foreignList', lookupList[f.name])
 			if ((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)){
-				fieldRenderer({name: f.name, type: 'text'}, valStore, errStore, tableHandle, mode, searchText, lookupList);
-				break;
+				return fieldRenderer({name: f.name, type: 'text'}, valStore, errStore, tableHandle, mode, searchText, lookupList);
 			}
 			else {
 				return (

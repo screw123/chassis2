@@ -67,7 +67,7 @@ class Store {
 	 }
 
 	@action changeDoc(t, m, d, includeFields, providedLookupList) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
-		console.log('changeDoc.providedLookupList', providedLookupList)
+		console.log('DocLoad1.changeDoc.providedLookupList', providedLookupList)
 		this.table = t;
 		this.mode = m;
 
@@ -90,7 +90,6 @@ class Store {
 					subTableFields.push({name: v, type: 'autocomplete'})
 					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['key']}) - 1, 1)
 					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['value']}) - 1, 1)
-					lookupList[v] = [];
 					searchText[v] = '';
 					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
 						if (error) { console.log('store.changeDoc.createFieldList.subtable',error) }
@@ -104,7 +103,6 @@ class Store {
 					fields.push({name: v, type: 'autocomplete'})
 					fields.splice(fields.findIndex((x) => {return x == v['key']}) - 1, 1)
 					fields.splice(fields.findIndex((x) => {return x == v['value']}) - 1, 1)
-					lookupList[v] = [];
 					searchText[v] = '';
 					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
 						if (error) { console.log('store.changeDoc.createFieldList.table',error) }
@@ -114,7 +112,6 @@ class Store {
 				else { fields.push({name: v, type: tableHandle['view'][v]}) }
 			}
 			if (tableHandle['view'][v]=='foreignList') {
-				lookupList[v] = [];
 				this.updateLookupList(v, providedLookupList[v])
 				searchText[v] = '';
 			}
@@ -122,7 +119,6 @@ class Store {
 		this.fields = fields;
 		this.subTableFields = subTableFields;
 		this.initForm();
-		this.lookupList = lookupList;
 		this.searchText = searchText;
 		this.submitting(false);
 
@@ -150,7 +146,9 @@ class Store {
 		}
 	}
 
-	@action updateLookupList(list, a) { this.lookupList[list] = a }
+	@action updateLookupList(list, a) {
+		this.lookupList[list] = a
+	}
 
 	@action initForm() { //initialize all form values and reset all errors
 		let fieldsValue = {};
@@ -180,8 +178,6 @@ class Store {
 			this.mode = 'error';
 			return;
 		}
-
-		console.log('store.loadForm.doc', doc)
 
 		Object.keys(doc).forEach((v)=> {
 			//object in document can be plain value or object, object can be date or subTable
@@ -243,7 +239,6 @@ class Store {
 			this.searchText[v.name] = this.subTableFieldsValue[v.name]
 		})
 		this.loadDocHandler.stop();
-		console.log(doc);
 	}
 
 	@action handleAddLine() { //add line for subtable

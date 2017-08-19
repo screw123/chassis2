@@ -24,7 +24,7 @@ class Store {
 	@observable docId = '';
 	@observable lookupList = {};
 
-	@action updatelookupList() { this.lookupList = {organization: getUserOrg.callPromise(Meteor.userId())} }
+	@action updatelookupList(b) { this.lookupList = {organization: b} }
 
 	@action setMode(docMode, table, id) {
 		switch(docMode) {
@@ -65,6 +65,8 @@ const store = new Store();
 	async componentWillMount() {
 		if (store.allowedModes.includes(this.props.params.docMode)) {
 			let a = await this.verifyUser();
+			let b = await getUserOrg.callPromise(Meteor.userId());
+			store.updatelookupList(b);
 			store.setMode(this.props.params.docMode, this.props.params.table, this.props.params.id);
 		}
 		else {
@@ -96,7 +98,7 @@ const store = new Store();
 	}
 
 	render() {
-		store.updatelookupList()
+		console.log('claimTest.render', store.lookupList)
 		return (
 			<div>
 				{(store.mode=='docList') &&
@@ -126,7 +128,7 @@ const store = new Store();
 						docId={store.docId}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
 						includeFields={['docNum', 'organization', 'totalClaimAmt', 'claimDesc']}
-						providedLookupList={store.lookupList}
+						providedLookupList={{}}
 						docListPath={'/claims/ClaimTest/'}
 						setShowCommonDialog={this.props.setShowCommonDialog}
 						setCommonDialogMsg={this.props.setCommonDialogMsg}
