@@ -11,7 +11,7 @@ import accounting from 'accounting';
 import { tableStyle, fieldStyle, comStyle, buttonStyle} from '../theme/ThemeSelector.js';
 import { userRole2Str } from '../../api/helper.js'
 
-export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMenu) => {
+export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMenu, isSubTable) => {
 	const contentType = (isHeader)?'header':'content'
 	if (isHeader) {
 		switch(fieldView) {
@@ -32,10 +32,13 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'list':
 			case 'roles':
 			case 'foreignList':
-				return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
-					e.preventDefault();
-					funcTableMenu(true, e.currentTarget, field);
-				}}> { value } </div>;
+				if (isSubTable===undefined) {
+					return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
+						e.preventDefault();
+						funcTableMenu(true, e.currentTarget, field);
+					}}> { value } </div>;
+				}
+				else { return <div key={key} style={fieldStyle[fieldView][contentType]}> { value } </div> }
 			case 'icon':
 				return <div> Error: please manually handle icons </div>;
 			default:
