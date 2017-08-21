@@ -126,6 +126,7 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 	}
 })
 export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchText, lookupList) => {
+	console.log(f.name)
 	switch(f.type) {
 		case 'date':
 			return (
@@ -263,6 +264,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 		case 'array':
 			<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
 		case 'foreignList':
+			console.log('fieldRenderer.foreignList', f.name, 'test=',((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)))
 			if ((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)){
 				return fieldRenderer({name: f.name, type: 'text'}, valStore, errStore, tableHandle, mode, searchText, lookupList);
 			}
@@ -302,7 +304,7 @@ export const uploadPic = async (url, modName) => {
 }
 
 export const subTableCellRenderer = (isHeader, value, fieldView, key) => {
-	cellRenderer(isHeader, value, fieldView, key, undefined, undefined, true)
+	return cellRenderer(isHeader, value, fieldView, key, undefined, undefined, true)
 }
 
 export const fieldsToDBFilter = (list) => {

@@ -312,6 +312,7 @@ const store = new Store();
 						return subTableCellRenderer(false, row[replaceField] , tableHandle['view'][replaceField], replaceField+index)
 					}
 					else {
+						console.log('rendering cell')
 						return subTableCellRenderer(false, row[v.name], tableHandle['view'][v.name], v.name+'-'+index)
 					}
 				})}
@@ -440,7 +441,9 @@ const store = new Store();
 					<h3>Main fields</h3>
 				</div>
 				<div className="widget widget-1col">
-					{store.fields.map((v) => fieldRenderer(v, store.fieldsValue, store.fieldsErr, tableHandle, store.mode, store.searchText, store.lookupList))}
+					{store.fields.map((v) => {
+						return fieldRenderer(v, store.fieldsValue, store.fieldsErr, tableHandle, store.mode, store.searchText, store.lookupList)
+					})}
 				</div>
 				{/*subtable start */}
 				{(store.subTableFields.length != 0) && (

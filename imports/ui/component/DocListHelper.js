@@ -32,6 +32,7 @@ export const cellRenderer = (isHeader, value, fieldView, key, field, funcTableMe
 			case 'list':
 			case 'roles':
 			case 'foreignList':
+				console.log('isHeader, value, fieldView, key, field, funcTableMenu, isSubTable', isHeader, value, fieldView, key, field, funcTableMenu, isSubTable)
 				if (isSubTable===undefined) {
 					return <div key={key} style={fieldStyle[fieldView][contentType]} onTouchTap={(e) => {
 						e.preventDefault();
