@@ -65,7 +65,7 @@ const store = new Store();
 		e.preventDefault();
 		store.toggleLoggingIn(true);
 
-		Meteor.loginWithPassword(store.user.email, store.user.password, function (error) {
+		Meteor.loginWithPassword(store.user.email.trim(), store.user.password, function (error) {
 			if (error) {
 				store.handleLoginError(error.error + ' ' + error.reason);
 				store.toggleShowLoginErr();
