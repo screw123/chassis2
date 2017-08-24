@@ -12,7 +12,7 @@ import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 if (Meteor.isServer) {
 	Meteor.publish('user.profile', function a() {
 		return Meteor.users.find({}, {
-			fields: {_id: 1, emails: 1, profile: 1, status: 1}
+			fields: {_id: 1, emails: 1, profile: 1, status: 1, currentGroup: 1}
 		});
 	});
 	Meteor.publish('user.ALL', function a() {
@@ -158,7 +158,7 @@ export const getUserOrg = new ValidatedMethod({
 				let uid = '';
 				if (id === undefined) { uid = this.userId }
 				else { uid = id }
-				
+
 				const a = Meteor.users.findOne({_id: id} ,{filter: {roles: 1}});
 				return Object.keys(a.roles);
 			}

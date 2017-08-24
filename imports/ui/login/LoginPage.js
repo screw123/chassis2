@@ -24,6 +24,12 @@ class Store {
 
 	@observable loginErr = '';
 	@observable showLoginErr = false;
+	@observable loggingIn = false;
+
+	@action toggleLoggingIn(b) {
+		if (b===undefined) { this.loggingIn = !this.loggingIn }
+		else { this.loggingIn = b}
+	}
 
 	@action handleUserUpdate (key, value) {
 		this.user[key] = value;
@@ -57,12 +63,16 @@ const store = new Store();
 
 	handleSubmit(e) {
 		e.preventDefault();
+		store.toggleLoggingIn(true);
+
 		Meteor.loginWithPassword(store.user.email, store.user.password, function (error) {
 			if (error) {
 				store.handleLoginError(error.error + ' ' + error.reason);
 				store.toggleShowLoginErr();
+				store.toggleLoggingIn(false);
 			} else {
 				browserHistory.push('/');
+				store.toggleLoggingIn(false);
 			}
 		});
 	}
@@ -72,14 +82,23 @@ const store = new Store();
 			<div className="row-center">
 				<div className="widget widget-default">
 					<h1>登入</h1>
-					<TextField hintText="請輸入Email" name="email" floatingLabelText="Email" value={store.user.email} onChange={e => store.handleUserUpdate(e.target.name, e.target.value)}/>
-					<div>
-						<TextField hintText="請輸入密碼" name="password" floatingLabelText="密碼" type="password" value={store.user.password} onChange={e => store.handleUserUpdate(e.target.name, e.target.value)}/>
-						<RaisedButton className="button" secondary={true} style={iconButtonStyle} icon={<FontIcon className="fa fa-sign-in" />} onTouchTap={(e) => this.handleSubmit(e)} />
+						<TextField disabled={store.loggingIn} hintText="請輸入Email" name="email" floatingLabelText="Email" value={store.user.email} onChange={e => store.handleUserUpdate(e.target.name, e.target.value)}/>
+						<div>
+
+						<TextField disabled={store.loggingIn} hintText="請輸入密碼" name="password" floatingLabelText="密碼" type="password" value={store.user.password}
+							onChange={e => store.handleUserUpdate(e.target.name, e.target.value)}
+							onKeyPress={(e) => {
+								if (e.key === 'Enter') {
+									this.handleSubmit(e)
+								}
+							}}
+						/>
+
+						<RaisedButton disabled={store.loggingIn} className="button" secondary={true} style={iconButtonStyle} icon={<FontIcon className="fa fa-sign-in" />} onTouchTap={(e) => this.handleSubmit(e)} />
 					</div>
 					<div>
-						<RaisedButton label="忘記密碼" primary={true} style={buttonStyle} containerElement={<Link to="/signup"/>} />
-						<RaisedButton label="新帳號" primary={true} style={buttonStyle} containerElement={<Link to="/signup"/>} />
+						<RaisedButton disabled={store.loggingIn} label="忘記密碼" primary={true} style={buttonStyle} containerElement={<Link to="/signup"/>} />
+						<RaisedButton disabled={store.loggingIn} label="新帳號" primary={true} style={buttonStyle} containerElement={<Link to="/signup"/>} />
 					</div>
 					<Dialog
 						actions={<RaisedButton className="button" label="OK" onTouchTap={() => store.toggleShowLoginErr()} />}
