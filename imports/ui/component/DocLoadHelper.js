@@ -126,7 +126,6 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 	}
 })
 export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchText, lookupList) => {
-	console.log(f.name)
 	switch(f.type) {
 		case 'date':
 			return (
@@ -163,7 +162,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 		case 'sysID':
 		case 'text':
 			return (
-				<TextField disabled={mode=='view'} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
+				<TextField disabled={mode=='view'} key={f.name} className="default-textField" name={f.name} hintText="請輸入文字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
 		case 'url':
 			if (_.isObject(valStore[f.name])) { //File/blob, i.e. user just selected it from local.  In this case we only use url not a
@@ -177,14 +176,14 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			const filename = (a.length > 10)? (a.substring(0,9) + "..."): (a)
 			if (mode=='view') {
 				return (
-					<RaisedButton name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-search" style={{height: '24px'}} key={f.name+'_view'}/>} label={filename} primary={true}
+					<RaisedButton key={f.name} name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-search" style={{height: '24px'}} key={f.name+'_view'}/>} label={filename} primary={true}
 						onTouchTap={(e) => window.open(url, "_blank", "location=0,menubar=0,toolbar=0,")}
 					/>
 				)
 			}
 			if ((a=='上傳檔案') || (errStore[f.name].length > 0)) { //if not a file or have error, do not show view button
 				return (
-					<RaisedButton containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
+					<RaisedButton key={f.name} containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
 						label={ (errStore[f.name] == '')? (filename): (errStore[f.name]) }
 						primary={(errStore[f.name] == '')}
 						onChange={ (e) => { updateVal(valStore, errStore, f.type, f.name, e.target.files[0], tableHandle)}}
@@ -196,14 +195,14 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			else {
 				return (
 					<div className="widget">
-						<RaisedButton containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
+						<RaisedButton key={f.name+'_pick'} containerElement='label' name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-cloud-upload" style={{height: '24px'}} key={f.name+'_upload'}/>}
 							label={ (errStore[f.name] == '')? (filename): (errStore[f.name]) }
 							primary={(errStore[f.name] == '')}
 							onChange={ (e) => { updateVal(valStore, errStore, f.type, f.name, e.target.files[0], tableHandle)}}
 						>
 							<input type="file" className="inputfile" />
 						</RaisedButton>
-						<RaisedButton name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-search" style={{height: '24px'}} key={f.name+'_view'}/>} label='查看檔案' primary={true}
+						<RaisedButton key={f.name+'_view'} name={f.name} style={comStyle} labelColor={'#ff0000'} icon={<FontIcon className="fa fa-search" style={{height: '24px'}} key={f.name+'_view'}/>} label='查看檔案' primary={true}
 							onTouchTap={(e) => window.open(url, "_blank", "location=0,menubar=0,toolbar=0,")}
 						/>
 					</div>
@@ -212,7 +211,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 
 		case 'longText':
 			return (
-				<TextField className="default-textField" name={f.name} hintText="請輸入文字, 可分行" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'}
+				<TextField key={f.name} className="default-textField" name={f.name} hintText="請輸入文字, 可分行" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'}
 					onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} multiLine={true} rows={1}
 				/>
 			);
@@ -220,24 +219,24 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 		case 'numID':
 		case 'integer':
 			return (
-				<TextField className="default-textField" name={f.name} hintText="請輸入整數" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
+				<TextField key={f.name} className="default-textField" name={f.name} hintText="請輸入整數" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
 		case 'currency':
 			return (
-				<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
+				<TextField key={f.name} className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
 		case 'decimal':
 			return (
-				<TextField className="default-textField" name={f.name} type="number" hintText="請輸入數字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
+				<TextField key={f.name} className="default-textField" name={f.name} type="number" hintText="請輸入數字" value={valStore[f.name]} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value, tableHandle)} errorText={errStore[f.name]} />
 			);
 		case 'status':
 		case 'autocomplete':
 			return (
-				<AutoComplete disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[tableHandle.view[f.name].key].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
+				<AutoComplete key={f.name} disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[tableHandle.view[f.name].key].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
 					style={comStyle} menuStyle={comStyle} listStyle={comStyle}
 					value={valStore[f.name]}
 					searchText={searchText[f.name]}
-					dataSource={lookupList[f.name]}
+					dataSource={(lookupList[f.name]===undefined)?['Loading...']:lookupList[f.name]}
 					dataSourceConfig={{
 						text: tableHandle.view[f.name].link.text,
 						value:  tableHandle.view[f.name].link.value}}
@@ -251,30 +250,29 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			);
 		case 'boolean':
 			return (
-				<Checkbox disabled={mode=='view'} name={f.name} label={tableHandle.schema[f.name].label} checked={valStore[f.name]} style={comStyle} onCheck={(e, isInputChecked) => updateVal(valStore, errStore, f.type, f.name, isInputChecked, tableHandle)}/>
+				<Checkbox key={f.name} disabled={mode=='view'} name={f.name} label={tableHandle.schema[f.name].label} checked={valStore[f.name]} style={comStyle} onCheck={(e, isInputChecked) => updateVal(valStore, errStore, f.type, f.name, isInputChecked, tableHandle)}/>
 			)
 		case 'list':
 			return (
-				<SelectField className="default-textField" value={valStore[f.name]} onChange={(e, i, payload) => updateVal(valStore, errStore, f.type, f.name, payload, tableHandle)} name={f.name} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} errorText={errStore[f.name]} menuStyle={comStyle} listStyle={comStyle} maxHeight={200}>
+				<SelectField key={f.name} className="default-textField" value={valStore[f.name]} onChange={(e, i, payload) => updateVal(valStore, errStore, f.type, f.name, payload, tableHandle)} name={f.name} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} errorText={errStore[f.name]} menuStyle={comStyle} listStyle={comStyle} maxHeight={200}>
 					{tableHandle.schema[f.name].allowedValues.map((v)=> {
 						return <MenuItem value={v} primaryText={v} />
 					})}
 				</SelectField>
 			)
 		case 'array':
-			<TextField className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
+			<TextField key={f.name} className="default-textField" name={f.name} type="number" hintText="請輸入金額" value={valStore[f.name].join(";")} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} onChange={(e) => updateVal(valStore, errStore, f.type, f.name, e.target.value.split(";"), tableHandle)} errorText={errStore[f.name]} />
 		case 'foreignList':
-			console.log('fieldRenderer.foreignList', f.name, 'test=',((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)))
 			if ((lookupList[f.name]===undefined)||(lookupList[f.name].length < 1)){
 				return fieldRenderer({name: f.name, type: 'text'}, valStore, errStore, tableHandle, mode, searchText, lookupList);
 			}
 			else {
 				return (
-					<AutoComplete disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
+					<AutoComplete key={f.name} disabled={mode=='view'} className="default-textField" floatingLabelText={tableHandle.schema[f.name].label} name={f.name} filter={AutoComplete.fuzzyFilter} openOnFocus={true} maxSearchResults={5}
 						style={comStyle} menuStyle={comStyle} listStyle={comStyle}
 						value={valStore[f.name]}
 						searchText={searchText[f.name]}
-						dataSource={lookupList[f.name].toJS()}
+						dataSource={(lookupList[f.name]===undefined)?['Loading...']:lookupList[f.name]}
 						ref={"foreignList_"+f.name}
 						onNewRequest={(v, i) => {
 							if (i==-1) { }

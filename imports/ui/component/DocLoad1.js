@@ -67,7 +67,6 @@ class Store {
 	 }
 
 	@action changeDoc(t, m, d, includeFields, providedLookupList) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
-		console.log('DocLoad1.changeDoc.providedLookupList', providedLookupList)
 		this.table = t;
 		this.mode = m;
 
@@ -311,10 +310,7 @@ const store = new Store();
 						let replaceField = tableHandle['view'][v.name]['key'];
 						return subTableCellRenderer(false, row[replaceField] , tableHandle['view'][replaceField], replaceField+index)
 					}
-					else {
-						console.log('rendering cell')
-						return subTableCellRenderer(false, row[v.name], tableHandle['view'][v.name], v.name+'-'+index)
-					}
+					else {return subTableCellRenderer(false, row[v.name], tableHandle['view'][v.name], v.name+'-'+index)}
 				})}
 				<FontIcon className="fa fa-trash" style={{height: '24px'}} onTouchTap={() => store.handleRemoveLine(index)}/>
 			</div>
