@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
-import { browserHistory } from 'react-router';
+import { browserHistory, Link } from 'react-router';
 
 import { observer } from "mobx-react";
 import { observable, useStrict, action } from 'mobx';
@@ -27,7 +27,9 @@ class Store {
 	@observable userGroup = '';
 	@observable drawerOpen = false;
 	@observable showLogoutDialog = false;
-	@action updateUserGroup() { if (Meteor.user()===undefined) {} else { this.userGroup = Meteor.user().currentGroup } }
+	@action updateUserGroup() { if (Meteor.user()===null) {
+		console.log('user is undefined, userGroup will not update')
+	} else { this.userGroup = Meteor.user().currentGroup } }
 	@action toggleDrawer() {
 		if (this.userGroup=='') { this.updateUserGroup(); }
 		this.drawerOpen = !this.drawerOpen;
@@ -56,6 +58,7 @@ const store = new Store()
 
 	genLoginCard() {
 		if (Meteor.user() == null) {
+			console.log('user=null, showing click to login')
 			return (
 				<Card style={{backgroundColor: currentTheme.palette.accent1Color}} onTouchTap={()=>this.handleGoToPage("/login")}>
 
@@ -66,10 +69,10 @@ const store = new Store()
 				</Card>
 			)
 		} else {
-
+			console.log('user=something, generate login card')
 			return (
 				<div>
-					<Card >
+					<Card>
 						<CardHeader
 							title={'  ' + Meteor.user().profile.lastName + ' ' + Meteor.user().profile.firstName}
 							subtitle={store.userGroup}
@@ -88,8 +91,9 @@ const store = new Store()
 									store.updateUserGroup();
 								}}
 							>
-								{Object.keys(Meteor.user().roles).map((v)=> <MenuItem value={v} primaryText={v} />)}
+								{Object.keys(Meteor.user().roles).map((v)=> <MenuItem value={v} primaryText={v} key={v} />)}
 							</SelectField>
+							<RaisedButton label="變更密碼" className="button" primary={true} style={buttonStyle} containerElement={<Link to="/resetPassword"/>} onTouchTap={() => store.toggleDrawer()} />
 							<RaisedButton label="登出" className="button" primary={true} style={buttonStyle} onTouchTap={() => store.toggleLogoutDialog()} />
 							{}
 						</CardText>

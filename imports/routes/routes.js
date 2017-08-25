@@ -8,6 +8,7 @@ useStrict(true);
 // pages
 import SignupPage from '../ui/login/SignupPage.js'
 import LoginPage from '../ui/login/LoginPage.js'
+import ResetPassword from '../ui/login/ResetPassword.js'
 import Dashboard from '../ui/dashboard/Dashboard.js'
 import EditClaim from '../ui/claims/EditClaim.js'
 import ClaimList from '../ui/claims/ClaimList.js'
@@ -28,6 +29,7 @@ export const renderRoutes = () => (
             <IndexRoute component={Dashboard}/>
             <Route path="login" component={LoginPage}/>
             <Route path="signup" component={SignupPage}/>
+            <Route path="resetPassword" component={ResetPassword}/>
             <Route path="dashboard" component={Dashboard}/>
             <Route path="claims">
                 <IndexRoute component={ClaimList}/>

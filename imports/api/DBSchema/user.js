@@ -116,7 +116,7 @@ export const resetPassword = new ValidatedMethod({
 	run({id, password}) {
 		if (Meteor.isServer) {
 			try {
-				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
+				if (!Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) {
 					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to reset password.') }
 				}
 				Accounts.setPassword(id, password, true);
