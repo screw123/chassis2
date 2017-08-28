@@ -3,6 +3,7 @@ import lodash from 'lodash';
 
 import '../imports/api/auth/CheckAuth.js';
 
+import '../imports/api/DBSchema/acct_journal.js';
 import '../imports/api/DBSchema/business.js';
 import '../imports/api/DBSchema/claims.js';
 import '../imports/api/DBSchema/claimsHistory.js';

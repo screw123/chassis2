@@ -63,6 +63,7 @@ const store = new Store();
 				<ListItem primaryText="CoA" onTouchTap={() => { browserHistory.push('/admin/DocList/CoA')} } />
 				<ListItem primaryText="Status" onTouchTap={() => { browserHistory.push('/admin/DocList/status')} } />
 				<ListItem primaryText="OrgRole" onTouchTap={() => { browserHistory.push('/admin/DocList/OrgRole')} } />
+				<ListItem primaryText="Account Journal" onTouchTap={() => { browserHistory.push('/admin/DocList/acctJournal')} } />
 			</List>
 		)
 	}

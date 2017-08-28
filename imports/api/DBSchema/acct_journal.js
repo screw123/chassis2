@@ -10,7 +10,7 @@ import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 const acctJournal = new Mongo.Collection('acct_journal');
 
 export const acctJournalSchema = {
-	batchId: {type: Number, label: '記錄編號', unique: true, optional: true},
+	batchId: {type: Number, label: '記錄編號'},
 	batchDesc: { type: String, label: '記錄原因' },
 	journalDate: {type: Date, label: '記錄日期'},
 
@@ -42,7 +42,7 @@ export const acctJournalSchema = {
 	EXRate: {type: Number, decimal: true, label: '匯率', min: 0, defaultValue: 1 },
 	EXAmt: { type: Number, decimal: true, label: '外幣金額' },
 	amt: { type: Number, label: '結算金額', decimal: true, autoValue: function() {
-		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet) {
+		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet)) {
 			return this.field("EXRate") * this.field("EXAmt")
 		}
 	}},
@@ -109,8 +109,8 @@ const nextAutoincrement = function() { return Meteor.wrapAsync(doAutoincrement)(
 
 acctJournal.attachSchema(new SimpleSchema(acctJournalSchema));
 
-export const newClaim = new ValidatedMethod({
-	name: 'Claims.newClaim',
+export const newAcctJournal = new ValidatedMethod({
+	name: 'acctJournal.new',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkLoggedInError: {
 		error: 'notLoggedIn',
@@ -121,23 +121,24 @@ export const newClaim = new ValidatedMethod({
 	run(args) {
 		if (Meteor.isServer) {
 			//fixme check if user belongs to the organization he is claiming to
-			docNum = nextAutoincrement();
-			const d = JSON.parse(JSON.stringify(Object.assign({}, args, {'docNum': docNum})));
+			const d = args;
 			try {
-				const a = Claims.insert(d);
-				return Claims.findOne({_id: a}, {fields: {'docNum': 1}}).docNum
+				const a = acctJournal.insert(d);
+				return acctJournal.findOne({_id: a}, {fields: {'_id': 1}})._id
 			}
-			catch (err) {
-				throw new Meteor.Error('insert-failed', err.message)
-
-			}
+			catch (err) { throw new Meteor.Error('insert-failed', err.message) }
 		}
 	}
 });
 
-export const updateClaim = new ValidatedMethod({
-	name: 'Claims.updateClaim',
+export const updateAcctJournal = new ValidatedMethod({
+	name: 'acctJournal.update',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkRoles: {
+		roles: ['admin'],
+		group: 'SYSTEM',
+		rolesError: { error: 'accessDenied', message: '用戶權限不足'}
+	},
 	checkLoggedInError: {
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
@@ -146,8 +147,7 @@ export const updateClaim = new ValidatedMethod({
 	run({filter, args}) {
 		if (Meteor.isServer) {
 			try {
-				//fixme check if admin or "boss of this org", allow update, or if claim user himself.  otherwise raise error
-				const a = Claims.update(filter, {$set: args});
+				const a = acctJournal.update(filter, {$set: args});
 				return '更新了'+a+'張文件';
 			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
@@ -155,8 +155,8 @@ export const updateClaim = new ValidatedMethod({
 	}
 });
 
-export const deleteClaim = new ValidatedMethod({ //only admin can delete doc
-	name: 'Claims.deleteClaim',
+export const deleteAcctJournal = new ValidatedMethod({ //only admin can delete doc
+	name: 'acctJournal.delete',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkRoles: {
 		roles: ['admin'],
@@ -171,7 +171,7 @@ export const deleteClaim = new ValidatedMethod({ //only admin can delete doc
 	run(args) {
 		if (Meteor.isServer) {
 			try {
-				const a = Claims.remove(args);
+				const a = acctJournal.remove(args);
 				return '移除了'+a+'張文件';
 			}
 			catch(err) { throw new Meteor.Error('delete-failed', err.message) }
@@ -179,8 +179,8 @@ export const deleteClaim = new ValidatedMethod({ //only admin can delete doc
 	}
 });
 
-export const downloadClaim = new ValidatedMethod({
-	name: 'Claims.downloadClaim',
+export const downloadAcctJournal = new ValidatedMethod({
+	name: 'acctJournal.download',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkLoggedInError: {
 		error: 'notLoggedIn',
@@ -189,14 +189,14 @@ export const downloadClaim = new ValidatedMethod({
 	validate() { },
 	run({query, filter}) {
 		if (Meteor.isServer) {
-			try { return Claims.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).fetch() }
+			try { return acctJournal.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).fetch() }
 			catch(err) { throw new Meteor.Error('download-failed', err.message) }
 		}
 	}
 });
 
-export const qtyClaim = new ValidatedMethod({
-	name: 'Claims.qtyClaim',
+export const qtyAcctJournal = new ValidatedMethod({
+	name: 'acctJournal.qty',
 	mixins:  [LoggedInMixin, CallPromiseMixin],
 	checkLoggedInError: {
 		error: 'notLoggedIn',
@@ -205,7 +205,7 @@ export const qtyClaim = new ValidatedMethod({
 	validate() { },
 	run({query, filter}) {
 		if (Meteor.isServer) {
-			try { return Claims.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
+			try { return acctJournal.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
 			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
 		}
 	}
@@ -213,7 +213,7 @@ export const qtyClaim = new ValidatedMethod({
 
 if (Meteor.isServer) {
 	//init autoincrement for doc num
-	try { Claims.insert({_id: 'autoincrement', value: 0}); } catch(err) { }
+	try { acctJournal.insert({_id: 'autoincrement', value: 0}); } catch(err) { }
 
 	publishSpec.forEach((spec) => { //publish all publishSpec
 		Meteor.publish(spec.name, function(args) {
@@ -222,23 +222,20 @@ if (Meteor.isServer) {
 			if (args.limit === undefined) { }
 			else { lim = (args.limit > 65535) ? 65535 : args.limit }
 			const f = Object.assign({}, spec.filter, args.filter);
-			return Claims.find(f, { sort: args.sort, limit: lim } );
+			return acctJournal.find(f, { sort: args.sort, limit: lim } );
 		});
 	});
 
-	//this method need to be adjusted if it has userId as a field. fixme fix all existing schema
-	Meteor.publish('claims.getClaim', function({docId, filter}) {
+	//this method need to be adjusted if it has userId as a field.
+	Meteor.publish('acctJournal.getAcctJournal', function({docId, filter}) {
 		let d_cursor;
-		if ((filter===undefined)||(filter===null)) { d_cursor = Claims.find({_id: docId}) }
-		else { d_cursor = Claims.find({_id: docId}, {fields: Object.assign({}, filter, {userId:1}) }) }
+		if ((filter===undefined)||(filter===null)) { d_cursor = acctJournal.find({_id: docId}) }
+		else { d_cursor = acctJournal.find({_id: docId}, {fields: Object.assign({}, filter, {userId:1}) }) }
 
-		if (Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) { return d_cursor }
-		else {
-			const doc = d_cursor.fetch()[0];
-			if (this.userId == doc.userId) { return d_cursor }
-			else { throw new Meteor.Error('accessDenied', '用戶權限不足 @ claims.getClaim, Owner:'+doc.userId+', requester: '+this.userId) }
-		}
+		return d_cursor;
 	});
 }
 
-export default Claims;
+export default acctJournal;
+
+//Schema specific methods as below

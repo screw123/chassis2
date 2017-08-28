@@ -5,6 +5,7 @@
 //4. subline edit has to be full line.  Therefore subtable should be as slim as possible
 //5. Adding autocomplete to DocLoad needs to also add the underlying 2 fields as well, they will be automatically hidden
 
+import acctJournal, {acctJournalSchema, acctJournalView, newAcctJournal, updateAcctJournal, deleteAcctJournal, downloadAcctJournal, qtyAcctJournal} from './acct_journal.js'
 
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
 
@@ -22,6 +23,18 @@ import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus,
 
 export const tableHandles = (c) => {
 	switch(c) {
+		case 'acctJournal':
+			return {
+				'main': acctJournal,
+				'schema': Object.assign({}, acctJournalSchema, {'_id': {label: 'ID'}}),
+				'view': acctJournalView,
+				'new': newAcctJournal,
+				'update': updateAcctJournal,
+				'delete': deleteAcctJournal,
+				'download': downloadAcctJournal,
+				'count': qtyAcctJournal,
+				'singleDoc': 'acctJournal.getAcctJournal'
+			};
 		case 'business':
 			return {
 				'main': Business,

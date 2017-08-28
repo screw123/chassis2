@@ -108,7 +108,7 @@ export const newClaim = new ValidatedMethod({
 		if (Meteor.isServer) {
 			//fixme check if user belongs to the organization he is claiming to
 			docNum = nextAutoincrement();
-			const d = JSON.parse(JSON.stringify(Object.assign({}, args, {'docNum': docNum})));
+			const d = Object.assign({}, args, {'docNum': docNum});
 			try {
 				const a = Claims.insert(d);
 				return Claims.findOne({_id: a}, {fields: {'docNum': 1}}).docNum
