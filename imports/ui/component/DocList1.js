@@ -380,7 +380,7 @@ let sync_DBList = null;
 
 							{store.isMultiSelect && store.allowMultiDelete && <RaisedButton label="複數刪除" style={buttonStyle} secondary={true} icon={<FontIcon className="fa fa-trash-o" />} onTouchTap={() => this.deleteDoc(store.multiSelected.toJS())} />}
 
-							{!store.isMultiSelect && store.allowNewDoc && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push('/admin/DocLoad/'+ store.table + '/new')} />}
+							{!store.isMultiSelect && store.allowNewDoc && <RaisedButton label="新增" style={buttonStyle} primary={!store.isMultiSelect} secondary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => browserHistory.push(this.props.docLoadPath + store.table + '/new')} />}
 
 							{!store.isMultiSelect && store.allowDownload && <RaisedButton label={"下載CSV ("+store.DBList.length+")"} style={buttonStyle} primary={true} icon={<FontIcon className="fa fa-download" />} onTouchTap={() => handleDownloadCSV(store.DBList, store.cardTitle)} />}
 

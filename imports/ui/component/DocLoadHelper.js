@@ -126,6 +126,7 @@ export const updateVal = action(function updateVal(fieldStore, errStore, fieldTy
 	}
 })
 export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchText, lookupList) => {
+	try {
 	switch(f.type) {
 		case 'date':
 			return (
@@ -289,6 +290,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 		default:
 			return 'Error: FIELDVIEW UNKNOWN'
 	}
+} catch(err) { throw new Meteor.Error('fieldRenderer Error: ', err.message, f.name) }
 }
 
 export const uploadPic = async (url, modName) => {

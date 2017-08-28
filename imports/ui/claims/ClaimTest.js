@@ -104,10 +104,10 @@ const store = new Store();
 				{(store.mode=='docList') &&
 					<DocList1
 						cardTitle='所有報銷'
-						table='claims'
-						query='claims.ALL'
+						table='acctJournal'
+						query='acct_journal.ALL'
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
-						includeFields={['docNum', 'organization', 'totalClaimAmt', 'claimDesc', 'userId']}
+						includeFields={['_id','batchId','batchDesc','journalDate','userId','userName','user','organization','projectId','projectCode','project','businessId','businessCode','business','relatedDocType','relatedDocId','COAId','COADesc','COA','COAAcctType','COAisDebit','COAsubcat1','COAsubcat2',,'fiscalYear','fiscalPeriod','journalType','journalDesc','EXCurrency','EXRate','EXAmt','amt','supportDoc','createAt']}
 						initLimit={10}
 						allowMultiSelect={false}
 						allowDownload={true}
@@ -127,7 +127,7 @@ const store = new Store();
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
-						includeFields={['docNum', 'organization', 'totalClaimAmt', 'claimDesc', 'userId', 'userName', 'user', 'content.$.sequence', 'content.$.amt']}
+						includeFields={['_id','batchId','batchDesc','journalDate','userId','userName','user','organization','projectId','projectCode','project','businessId','businessCode','business','relatedDocType','relatedDocId','COAId','COADesc','COA','COAAcctType','COAisDebit','COAsubcat1','COAsubcat2',,'fiscalYear','fiscalPeriod','journalType','journalDesc','EXCurrency','EXRate','EXAmt','amt','supportDoc','createAt']}
 						providedLookupList={{organization: ['AAA','BBB']}}
 						docListPath={'/claims/ClaimTest/'}
 						setShowCommonDialog={this.props.setShowCommonDialog}
