@@ -79,9 +79,9 @@ export const acctJournalView = {
 	'COAId': 'sysID',
 	'COADesc': 'longText',
 	'COA': {type: 'autocomplete', key: 'COADesc', value: 'COAId', link: { 'q': 'CoA.list', 'text': "name", "value": "_id" }},
-	'COAAcctType': 'text',
+	'COAAcctType': 'list',
 	'COAisDebit': 'boolean',
-	'COAsubcat1': 'text',
+	'COAsubcat1': 'list',
 	'COAsubcat2': 'text',
 
 	'fiscalYear': 'integer',
@@ -123,6 +123,7 @@ export const newAcctJournal = new ValidatedMethod({
 			//fixme check if user belongs to the organization he is claiming to
 			const d = args;
 			try {
+				console.log(d)
 				const a = acctJournal.insert(d);
 				return acctJournal.findOne({_id: a}, {fields: {'_id': 1}})._id
 			}

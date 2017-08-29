@@ -293,7 +293,7 @@ const store = new Store();
 			this.props.setShowCommonDialog(true);
 		}
 		//prep the whole form. will handle error mode by re-direct to /404
-		store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextprops.providedLookupList);
+		store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextProps.providedLookupList);
 	}
 
 	subTableRowRenderer({ index, isScrolling, key, style }) {
