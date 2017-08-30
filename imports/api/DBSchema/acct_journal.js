@@ -43,7 +43,9 @@ export const acctJournalSchema = {
 	EXAmt: { type: Number, decimal: true, label: '外幣金額' },
 	amt: { type: Number, label: '結算金額', decimal: true, autoValue: function() {
 		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet)) {
-			return this.field("EXRate") * this.field("EXAmt")
+			console.log('autoValue for accct_journal.amt!', this.field("EXRate"), this.siblingField("EXRate"))
+			console.log('value=', this.field("EXRate").value * this.field("EXAmt").value)
+			return this.field("EXRate").value * this.field("EXAmt").value
 		}
 	}},
 	supportDoc: { type: String, label: '上傳檔案', regEx: SimpleSchema.RegEx.Url, optional: true},
@@ -61,7 +63,7 @@ export const acctJournalSchema = {
 
 export const acctJournalView = {
 	'_id': 'sysID',
-	'batchId': 'numID',
+	'batchId': 'integer', //so it can be edited in admin panel
 	'batchDesc': 'longText',
 	'journalDate': 'date',
 	'userId': 'user',
@@ -75,7 +77,7 @@ export const acctJournalView = {
 	'businessCode': 'text',
 	'business': {type: 'autocomplete', key: 'businessCode', value: 'businessId', 'link': { 'q': 'business.list', 'text': "code", "value": "_id" }},
 	'relatedDocType': 'text',
-	'relatedDocId': 'sysID',
+	'relatedDocId': 'text', //so it can be edited in admin panel
 	'COAId': 'sysID',
 	'COADesc': 'longText',
 	'COA': {type: 'autocomplete', key: 'COADesc', value: 'COAId', link: { 'q': 'CoA.list', 'text': "name", "value": "_id" }},

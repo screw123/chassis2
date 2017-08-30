@@ -237,7 +237,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 					style={comStyle} menuStyle={comStyle} listStyle={comStyle}
 					value={valStore[f.name]}
 					searchText={searchText[f.name]}
-					dataSource={(lookupList[f.name]===undefined)?['Loading...']:lookupList[f.name]}
+					dataSource={lookupList[f.name]}
 					dataSourceConfig={{
 						text: tableHandle.view[f.name].link.text,
 						value:  tableHandle.view[f.name].link.value}}
@@ -257,7 +257,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 			return (
 				<SelectField key={f.name} className="default-textField" value={valStore[f.name]} onChange={(e, i, payload) => updateVal(valStore, errStore, f.type, f.name, payload, tableHandle)} name={f.name} floatingLabelText={tableHandle.schema[f.name].label} disabled={mode=='view'} errorText={errStore[f.name]} menuStyle={comStyle} listStyle={comStyle} maxHeight={200}>
 					{tableHandle.schema[f.name].allowedValues.map((v)=> {
-						return <MenuItem value={v} primaryText={v} />
+						return <MenuItem key={v} value={v} primaryText={v} />
 					})}
 				</SelectField>
 			)
@@ -273,7 +273,7 @@ export const fieldRenderer = (f, valStore, errStore, tableHandle, mode, searchTe
 						style={comStyle} menuStyle={comStyle} listStyle={comStyle}
 						value={valStore[f.name]}
 						searchText={searchText[f.name]}
-						dataSource={(lookupList[f.name]===undefined)?['Loading...']:lookupList[f.name]}
+						dataSource={lookupList[f.name]}
 						ref={"foreignList_"+f.name}
 						onNewRequest={(v, i) => {
 							if (i==-1) { }

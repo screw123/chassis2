@@ -12,12 +12,16 @@ import { checkAuth } from '../../api/auth/CheckAuth.js';
 
 import DocList1 from '../component/DocList1.js';
 import DocLoad1 from '../component/DocLoad1.js';
+import DocLoad1_store from '../component/DocLoad1_store.js'
+import { tableHandles } from '../../api/DBSchema/DBTOC.js';
+import { updateVal } from '../component/DocLoadHelper.js';
 
-import { getUserOrg } from '../../api/DBSchema/user.js'
+import { getUserOrg } from '../../api/DBSchema/user.js';
+
+import TextField from 'material-ui/TextField';
 
 class Store {
 	allowedModes = [undefined, 'new', 'view', 'edit'];
-	table = 'claims';
 	@observable mode = ''; //control listing or show single doc details or etc
 	@observable docMode = ''; //control new/edit/view/etc in doc mode
 	@observable table = '';
@@ -45,6 +49,8 @@ class Store {
 	}
 }
 const store = new Store();
+let docLoadStore;
+let tableHandle;
 
 @observer export default class ClaimTest extends Component {
 	constructor(props) {
@@ -68,6 +74,9 @@ const store = new Store();
 			let b = await getUserOrg.callPromise(Meteor.userId());
 			store.updatelookupList(b);
 			store.setMode(this.props.params.docMode, this.props.params.table, this.props.params.id);
+			tableHandle = tableHandles(store.table)
+			if (store.mode=='DocLoad') {docLoadStore = new DocLoad1_store(tableHandle)}
+
 		}
 		else {
 			this.props.setCommonDialogMsg('錯誤: 不支援模式',this.props.params.docMode);
@@ -80,6 +89,8 @@ const store = new Store();
 		if (store.allowedModes.includes(nextProps.params.docMode)) {
 			let a = await this.verifyUser();
 			store.setMode(nextProps.params.docMode, nextProps.params.table, nextProps.params.id);
+			tableHandle = tableHandles(store.table)
+			if (store.mode=='DocLoad') {docLoadStore = new DocLoad1_store(tableHandle)}
 		}
 		else {
 			this.props.setCommonDialogMsg('錯誤: 不支援模式',nextProps.params.docMode);
@@ -88,17 +99,15 @@ const store = new Store();
 		}
 	}
 
-	async getLookupList() {
-		try {
-			const a = await getUserOrg.callPromise(Meteor.userId());
-			console.log(a)
-			return a
-		} catch(err) { console.log(err)}
-
+	getCustomComponent() {
+		console.log(store.fieldsValue['amt'])
+		return ({
+			'amt':
+				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={docLoadStore.fieldsValue['amt']} floatingLabelText={tableHandle.schema['amt'].label} disabled={docLoadStore.mode=='view'} onChange={(e) => updateVal(docLoadStore.fieldsValue, docLoadStore.fieldsErr, 'currency', 'amt', e.target.value, tableHandle)} errorText={docLoadStore.fieldsErr['amt']} />
+		})
 	}
 
 	render() {
-		console.log('claimTest.render', store.lookupList)
 		return (
 			<div>
 				{(store.mode=='docList') &&
@@ -123,12 +132,14 @@ const store = new Store();
 				}
 				{(store.mode=='docLoad') &&
 					<DocLoad1
+						store={docLoadStore}
 						table={store.table}
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
 						includeFields={['_id','batchId','batchDesc','journalDate','userId','userName','user','organization','projectId','projectCode','project','businessId','businessCode','business','relatedDocType','relatedDocId','COAId','COADesc','COA','COAAcctType','COAisDebit','COAsubcat1','COAsubcat2',,'fiscalYear','fiscalPeriod','journalType','journalDesc','EXCurrency','EXRate','EXAmt','amt','supportDoc','createAt']}
-						providedLookupList={{organization: ['AAA','BBB']}}
+						customFields={this.getCustomComponent()}
+						providedLookupList={store.lookupList}
 						docListPath={'/claims/ClaimTest/'}
 						setShowCommonDialog={this.props.setShowCommonDialog}
 						setCommonDialogMsg={this.props.setCommonDialogMsg}

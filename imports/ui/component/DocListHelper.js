@@ -7,6 +7,7 @@ import StatusChip from '../component/StatusChip.js';
 import UserChip from '../component/UserChip.js';
 import moment from 'moment';
 import accounting from 'accounting';
+import FileSaver from 'file-saver';
 
 import { tableStyle, fieldStyle, comStyle, buttonStyle} from '../theme/ThemeSelector.js';
 import { userRole2Str } from '../../api/helper.js'

@@ -1,17 +1,12 @@
 //DocLoad1
 
-//This is the standard DocLoad, also use for admin module
-//Nothing is started, fixme
-
 //Basic React/Meteor/mobx import
 import React, { Component } from 'react';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
 import { browserHistory, Link } from 'react-router';
 import { observer } from "mobx-react";
-import mobx, { observable, useStrict, action } from 'mobx';
-import { autorunX, observeX } from '../../api/tracker-mobx-autorun'
-useStrict(true);
+
 //Material-ui import
 import RaisedButton from 'material-ui/RaisedButton';
 import FontIcon from 'material-ui/FontIcon';
@@ -27,231 +22,33 @@ import { tableStyle, fieldStyle } from '../theme/ThemeSelector.js';
 import UserChip from './UserChip.js';
 //Custom function import
 import { checkAuth } from '../../api/auth/CheckAuth.js';
-//Custom Schema import
+//Custom Schema/store/helper import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
-import { getDefaultValue, updateVal, fieldRenderer, subTableCellRenderer, uploadPic, fieldsToDBFilter } from './DocLoadHelper.js';
+import { updateVal, fieldRenderer, subTableCellRenderer, uploadPic } from './DocLoadHelper.js';
+import DocLoad1_store from './DocLoad1_store.js'
 
 //Begin code
 let tableHandle;
 let dataTable;
-
-class Store {
-	@observable table = ''; //table name
-	@observable mode = 'loading'; //view, edit or new
-	@observable docId = '';
-
-	@observable lookupList = {}; //store autocomplete lookup list
-	@observable searchText = {};
-
-	@observable fields = []; //{name: n, type: t}
-	@observable fieldsValue = {};
-	@observable fieldsErr = {};
-
-	@observable subTableLines = [];
-	@observable subTableFields = [];
-	@observable subTableFieldsValue = {};
-	@observable subTableFieldsErr = {};
-
-	@observable rowHeight = 24; //table row Height, do not change easily
-	@observable rowWidth = window.innerWidth - 50;
-	@observable formSubmitting = false;
-	@observable loadDocHandler = undefined;
-	@observable rolesAllowed = [];
-
-	@action setRolesAllowed(a) { this.rolesAllowed = a }
-	@action submitting(b) {this.formSubmitting = b}
-
-	@action setRowDimensions(w,h) {
-		this.rowWidth=w;
-		this.rowHeight=h;
-	 }
-
-	@action changeDoc(t, m, d, includeFields, providedLookupList) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
-		this.table = t;
-		this.mode = m;
-
-		//Create view
-		let subTableFields = [];
-		let fields = [];
-		let lookupList = {};
-		let searchText = {};
-		let fieldsToInclude = [];
-
-		//if fields to show specified, then show specified fields, else show all
-		if (includeFields === undefined) { Object.keys(tableHandle['view']).forEach((v)=>fieldsToInclude.push(v)) }
-		else { fieldsToInclude = includeFields }
-
-		//compile field list for both main table and subtable.  Only support single subtable in a document
-		fieldsToInclude.forEach((v) => {
-			if (v.includes('.$.')) { //subtable
-				if (_.isPlainObject(tableHandle['view'][v])) {
-					let type = tableHandle['view'][v][type];
-					subTableFields.push({name: v, type: 'autocomplete'})
-					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['key']}) - 1, 1)
-					subTableFields.splice(subTableFields.findIndex((x) => {return x == v['value']}) - 1, 1)
-					searchText[v] = '';
-					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
-						if (error) { console.log('store.changeDoc.createFieldList.subtable',error) }
-						else {this.updateLookupList(v, result) }
-					});
-				}
-				else { subTableFields.push({name: v, type: tableHandle['view'][v]}) }
-			}
-			else {
-				if (_.isPlainObject(tableHandle['view'][v])) {
-					fields.push({name: v, type: 'autocomplete'})
-					fields.splice(fields.findIndex((x) => {return x == v['key']}) - 1, 1)
-					fields.splice(fields.findIndex((x) => {return x == v['value']}) - 1, 1)
-					searchText[v] = '';
-					Meteor.call(tableHandle['view'][v]['link']['q'], (error, result) => {
-						if (error) { console.log('store.changeDoc.createFieldList.table',error) }
-						else {this.updateLookupList(v, result) }
-					});
-				}
-				else { fields.push({name: v, type: tableHandle['view'][v]}) }
-			}
-			if (tableHandle['view'][v]=='foreignList') {
-				this.updateLookupList(v, providedLookupList[v])
-				searchText[v] = '';
-			}
-		});
-		this.fields = fields;
-		this.subTableFields = subTableFields;
-		this.initForm();
-		this.searchText = searchText;
-		this.submitting(false);
-
-		switch(m) {
-			case 'new':
-				this.mode = 'new';
-				break;
-			case 'edit':
-				this.mode = 'edit';
-				this.loadDocHandler = Meteor.subscribe(tableHandle['singleDoc'], {docId: d, filter: fieldsToDBFilter(fieldsToInclude)}, {
-					onReady: () => { this.loadForm(d, fieldsToInclude) },
-					onStop: (e) => { console.log(e) }
-				});
-				break;
-			case 'view':
-				this.mode = 'view';
-				this.loadDocHandler = Meteor.subscribe(tableHandle['singleDoc'], {docId: d, filter: fieldsToDBFilter(fieldsToInclude)}, {
-					onReady: () => { this.loadForm(d, fieldsToInclude) },
-					onStop: (e) => { console.log(e) }
-				});
-				break;
-			default:
-				this.mode = '404';
-				browserHistory.push('/404');
-		}
-	}
-
-	@action updateLookupList(list, a) {
-		this.lookupList[list] = a
-	}
-
-	@action initForm() { //initialize all form values and reset all errors
-		let fieldsValue = {};
-		let fieldsErr = {};
-		let subTableFieldsValue = {};
-		let subTableFieldsErr = {};
-		this.fields.forEach((v) => {
-			fieldsValue[v.name] = getDefaultValue(v.type);
-			fieldsErr[v.name] = '';
-		});
-		this.subTableFields.forEach((v) => {
-			subTableFieldsValue[v.name] = getDefaultValue(v.type);
-			subTableFieldsErr[v.name] = '';
-		});
-		this.fieldsValue = fieldsValue;
-		this.fieldsErr = fieldsErr;
-		this.subTableFieldsValue = subTableFieldsValue;
-		this.subTableFieldsErr = subTableFieldsErr;
-	}
-
-	@action loadForm(d, fieldsToInclude) {
-		//should only be called by subscription callback, i.e. after data is ready on client.
-		//Load data from minimongo into store, then stop subscription, i.e. data will not refresh
-
-		const doc = tableHandle['main'].findOne({_id: d}, {filter: fieldsToDBFilter(fieldsToInclude)});
-		if (doc === undefined) {
-			this.mode = 'error';
-			return;
-		}
-
-		Object.keys(doc).forEach((v)=> {
-			//object in document can be plain value or object, object can be date or subTable
-			if (doc[v] instanceof Date) {
-				updateVal(this.fieldsValue, this.fieldsErr, tableHandle['view'][v], v, doc[v], tableHandle)
-			} else if (typeof doc[v] === 'object') { //handle subtable, i.e. object but it's not "Date"
-				let content = [];
-				doc[v].forEach((a)=>{
-					let row = {};
-					Object.keys(a).forEach((b)=>{
-						row[v+'.$.'+b] = a[b]
-					})
-					content.push(row);
-				})
-				this.subTableLines = content
-			} else { //all number/text based fields
-				switch(tableHandle['view'][v]) {
-					case 'sysID':
-						this.fieldsValue[v] = doc[v]  //override updateVal if field is _id
-						break;
-					case 'url': //fixme show preview of PDF/picture
-						//const a = doc[v].split('/')
-						//this.fieldsValue[v] = (a[a.length-1].length > 10)? (a[a.length-1].substring(0,9) + "..."): (a[a.length-1])
-						this.fieldsValue[v] = doc[v];
-						break;
-					case 'text':
-					case 'longText':
-					case 'decimal':
-					case 'currency':
-					case 'boolean':
-					case 'numID':
-					case 'integer':
-					case 'user':
-					case 'status':
-					case 'list':
-					case 'foreignList':
-						updateVal(this.fieldsValue, this.fieldsErr, tableHandle['view'][v], v, doc[v], tableHandle);
-						break;
-					case 'array':
-						this.fieldsValue[v] = doc[v];
-						break;
-					default:
-						return undefined;
-				}
-
-			}
-		})
-		//loop autocomplete and convert them for UI
-		this.fields.filter((v)=> { return v.type==='autocomplete' }).forEach((v)=> {
-			this.searchText[v.name] = this.fieldsValue[tableHandle['view'][v.name]['key']]
-		})
-		this.subTableFields.filter((v)=> { return v.type==='autocomplete' }).forEach((v)=> {
-			this.searchText[v.name] = this.subTableFieldsValue[tableHandle['view'][v.name]['key']]
-		})
-		this.fields.filter((v)=> { return v.type==='foreignList' }).forEach((v)=> {
-			this.searchText[v.name] = this.fieldsValue[v.name]
-		})
-		this.subTableFields.filter((v)=> { return v.type==='foreignList' }).forEach((v)=> {
-			this.searchText[v.name] = this.subTableFieldsValue[v.name]
-		})
-		this.loadDocHandler.stop();
-	}
-
-	@action handleAddLine() { //add line for subtable
-		if (Object.values(this.subTableFieldsErr).some((a) => {return a != ''})) { return }
-		this.subTableLines.push(_.clone(this.subTableFieldsValue))
-		const seqName = this.subTableFields[0].name.split('.')[0] + '.$.'+'sequence'
-		this.subTableLines = this.subTableLines.slice().sort((a,b)=> { return a[seqName] - b[seqName] })
-	}
-	@action handleRemoveLine(i) { this.subTableLines.splice(i, 1) }
-}
-const store = new Store();
+let store;
 
 @observer export default class DocLoad1 extends Component {
-	constructor(props) { super(props) }
+	constructor(props) {
+		super(props);
+
+		tableHandle = tableHandles(this.props.table);
+
+		if (tableHandle === undefined) {
+			this.props.setCommonDialogMsg('錯誤: 數據庫 '+ this.props.table + ' 不存在.');
+			this.props.setShowCommonDialog(true);
+		}
+		else {
+			if (this.props.store) { store = this.props.store }
+			else { store = new DocLoad1_store(tableHandle) }
+			store.setRolesAllowed(this.props.rolesAllowed)
+			store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList);
+		}
+	}
 
 	async verifyUser(roles) {
 		return new Promise(async (resolve, reject) => {
@@ -269,17 +66,9 @@ const store = new Store();
 	}
 
 	async componentWillMount() { //table wrong: alert; mode wrong: 404; id wrong: pop up
-		store.setRolesAllowed(this.props.rolesAllowed)
-		let a = await this.verifyUser(store.rolesAllowed);
-		tableHandle = tableHandles(this.props.table);
-
-		if (tableHandle === undefined) {
-			//browserHistory.goBack()
-			this.props.setCommonDialogMsg('錯誤: 數據庫 '+ this.props.table + ' 不存在.');
-			this.props.setShowCommonDialog(true);
-		}
+		let a = await this.verifyUser(this.props.rolesAllowed);
 		//prep the whole form. will handle error mode by re-direct to /404
-		store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList);
+
 	}
 
 	async componentWillReceiveProps(nextProps) {
@@ -320,9 +109,7 @@ const store = new Store();
 	async handleSubmit(e) {
 		e.preventDefault();
 		store.submitting(true);
-		console.log('handleSubmit-1');
 		const authResult = await this.verifyUser();
-		console.log('handleSubmit-2');
 		//only check field error, ignore subTable, coz subTable input is only for adding lines.
 		if (Object.keys(store.fieldsErr).every((v) => store.fieldsErr[v]==='')) { }
 		else {
@@ -332,7 +119,6 @@ const store = new Store();
 		}
 		const fieldsValue = Object.assign({},store.fieldsValue)
 		const subTableValue = store.subTableLines.toJS()
-		console.log('handleSubmit-3');
 		//1. convert date from moment to Date()
 		store.fields.forEach((v)=>{
 			if ((v.type=='date')||(v.type=='datetime')) { fieldsValue[v.name] = fieldsValue[v.name].toDate() }
@@ -357,7 +143,7 @@ const store = new Store();
 						}
 					}
 					else {
-						let u = await this.uploadPic(fieldsValue[v.name], store.table+'_'+v.name);
+						let u = await uploadPic(fieldsValue[v.name], store.table+'_'+v.name);
 						updateVal(fieldsValue, store.fieldsErr, 'text', v.name, u, tableHandle);
 					}
 				} catch(err) {console.log(err)}
@@ -438,7 +224,13 @@ const store = new Store();
 				</div>
 				<div className="widget widget-1col">
 					{store.fields.map((v) => {
-						return fieldRenderer(v, store.fieldsValue, store.fieldsErr, tableHandle, store.mode, store.searchText, store.lookupList)
+						if (this.props.customFields[v]===undefined) {
+							return fieldRenderer(v, store.fieldsValue, store.fieldsErr, tableHandle, store.mode, store.searchText, store.lookupList)
+						}
+						else {
+							return this.props.customFields[v];
+						}
+
 					})}
 				</div>
 				{/*subtable start */}
@@ -450,7 +242,10 @@ const store = new Store();
 						{(store.mode!='view') && (
 							<div className="row-left">
 								<div className="widget widget-1col"> {/*create fields in subTable*/}
-									{store.subTableFields.map((v) => fieldRenderer(v, store.subTableFieldsValue, store.subTableFieldsErr, tableHandle, store.mode, store.searchText, store.lookupList))}
+									{store.subTableFields.map((v) => {
+										//fixme insert code here to check if props provide alternative components of "v"
+										return fieldRenderer(v, store.subTableFieldsValue, store.subTableFieldsErr, tableHandle, store.mode, store.searchText, store.lookupList)
+									})}
 								</div>
 								<div className="row-left">
 									<RaisedButton label="新增" primary={true} icon={<FontIcon className="fa fa-plus" />} onTouchTap={() => store.handleAddLine()} />
