@@ -8,14 +8,11 @@ import { getDefaultValue, updateVal, fieldsToDBFilter } from './DocLoadHelper.js
 
 export default class DocLoad1_store {
 
-	constructor(tH) {
-		console.log('DocLoad1_store created, tableHandle=', tH)
-		tableHandle = tH;
-	}
+	tableHandle = '';
+	constructor(tH) { tableHandle = tH }
 
 	@observable table = ''; //table name
 	@observable mode = 'loading'; //view, edit or new
-	@observable docId = '';
 
 	@observable lookupList = {}; //store autocomplete lookup list
 	@observable searchText = {};
@@ -43,7 +40,8 @@ export default class DocLoad1_store {
 		this.rowHeight=h;
 	 }
 
-	@action changeDoc(t, m, d, includeFields, providedLookupList) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
+	@action changeDoc(t, m, d, includeFields, providedLookupList, newTableHandle) { //t=table name, m=mode, d = docID, includedFields = array of field name vs DBTOC['view']
+		if (newTableHandle != undefined) { tableHandle = newTableHandle }
 		this.table = t;
 		this.mode = m;
 
@@ -57,7 +55,6 @@ export default class DocLoad1_store {
 		//if fields to show specified, then show specified fields, else show all
 		if (includeFields === undefined) { Object.keys(tableHandle['view']).forEach((v)=>fieldsToInclude.push(v)) }
 		else { fieldsToInclude = includeFields }
-
 
 		for (v of fieldsToInclude) { //have to pre-build lookupList and searchText for mobX reactivity
 			if (_.isPlainObject(tableHandle['view'][v])) {

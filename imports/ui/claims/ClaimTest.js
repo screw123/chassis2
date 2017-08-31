@@ -55,6 +55,8 @@ let tableHandle;
 @observer export default class ClaimTest extends Component {
 	constructor(props) {
 		super(props);
+		tableHandle = tableHandles(this.props.params.table)
+		docLoadStore = new DocLoad1_store(tableHandle)
 	}
 
 	async verifyUser() {
@@ -74,9 +76,6 @@ let tableHandle;
 			let b = await getUserOrg.callPromise(Meteor.userId());
 			store.updatelookupList(b);
 			store.setMode(this.props.params.docMode, this.props.params.table, this.props.params.id);
-			tableHandle = tableHandles(store.table)
-			if (store.mode=='DocLoad') {docLoadStore = new DocLoad1_store(tableHandle)}
-
 		}
 		else {
 			this.props.setCommonDialogMsg('錯誤: 不支援模式',this.props.params.docMode);
@@ -86,11 +85,10 @@ let tableHandle;
 	}
 
 	async componentWillReceiveProps(nextProps) {
+		tableHandle = tableHandles(nextProps.params.table)
 		if (store.allowedModes.includes(nextProps.params.docMode)) {
 			let a = await this.verifyUser();
 			store.setMode(nextProps.params.docMode, nextProps.params.table, nextProps.params.id);
-			tableHandle = tableHandles(store.table)
-			if (store.mode=='DocLoad') {docLoadStore = new DocLoad1_store(tableHandle)}
 		}
 		else {
 			this.props.setCommonDialogMsg('錯誤: 不支援模式',nextProps.params.docMode);
@@ -100,10 +98,10 @@ let tableHandle;
 	}
 
 	getCustomComponent() {
-		console.log(store.fieldsValue['amt'])
+		console.log(docLoadStore)
 		return ({
 			'amt':
-				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={docLoadStore.fieldsValue['amt']} floatingLabelText={tableHandle.schema['amt'].label} disabled={docLoadStore.mode=='view'} onChange={(e) => updateVal(docLoadStore.fieldsValue, docLoadStore.fieldsErr, 'currency', 'amt', e.target.value, tableHandle)} errorText={docLoadStore.fieldsErr['amt']} />
+				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={50} floatingLabelText={tableHandle.schema['amt'].label} disabled={docLoadStore.mode=='view'} onChange={(e) => updateVal(docLoadStore.fieldsValue, docLoadStore.fieldsErr, 'currency', 'amt', e.target.value, tableHandle)} errorText={docLoadStore.fieldsErr['amt']} />
 		})
 	}
 

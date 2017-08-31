@@ -44,8 +44,10 @@ let store;
 		}
 		else {
 			if (this.props.store) { store = this.props.store }
-			else { store = new DocLoad1_store(tableHandle) }
-			store.setRolesAllowed(this.props.rolesAllowed)
+			else {
+				store = new DocLoad1_store(tableHandle);
+			}
+			store.setRolesAllowed(this.props.rolesAllowed);
 			store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList);
 		}
 	}
@@ -67,22 +69,25 @@ let store;
 
 	async componentWillMount() { //table wrong: alert; mode wrong: 404; id wrong: pop up
 		let a = await this.verifyUser(this.props.rolesAllowed);
-		//prep the whole form. will handle error mode by re-direct to /404
-
 	}
 
 	async componentWillReceiveProps(nextProps) {
-		store.setRolesAllowed(nextProps.rolesAllowed)
-		let a = await this.verifyUser(store.rolesAllowed);
 		tableHandle = tableHandles(nextProps.table);
-
 		if (tableHandle === undefined) {
 			//browserHistory.goBack()
 			this.props.setCommonDialogMsg('錯誤: 數據庫 '+ nextProps.table + ' 不存在.');
 			this.props.setShowCommonDialog(true);
+			store.changeDoc('', 'error', '', '', '');
 		}
-		//prep the whole form. will handle error mode by re-direct to /404
-		store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextProps.providedLookupList);
+		else {
+			if (this.props.rolesAllowed != nextProps.rolesAllowed) {
+				let a = await this.verifyUser(nextProps.rolesAllowed);
+				store.setRolesAllowed(nextProps.rolesAllowed);
+			}
+			if ((this.props.table != nextProps.table) || (this.props.mode != nextProps.mode) || (this.props.docId != nextProps.docId) || (this.props.includeFields != nextProps.includeFields) || (this.props.providedLookupList != nextProps.providedLookupList)) {
+				store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextProps.providedLookupList, tableHandle)
+			}
+		}
 	}
 
 	subTableRowRenderer({ index, isScrolling, key, style }) {
@@ -210,11 +215,12 @@ let store;
 	}
 
 	render() {
-		let headerText = _.upperCase(store.mode + ' 1 ' + store.table);
+		let headerText = _.upperCase(store.mode + store.table);
 		console.log(store.rowWidth, store.rowHeight);
 		if (store.mode=='error') {
 			this.props.setCommonDialogMsg("請求錯誤");
 			this.props.setShowCommonDialog(true);
+			return '';
 		}
 		return (
 
