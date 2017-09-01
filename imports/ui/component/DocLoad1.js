@@ -48,7 +48,7 @@ let store;
 				store = new DocLoad1_store(tableHandle);
 			}
 			store.setRolesAllowed(this.props.rolesAllowed);
-			store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList);
+			store.changeDoc(this.props.table, this.props.mode, this.props.docId, this.props.includeFields, this.props.providedLookupList, tableHandle);
 		}
 	}
 
@@ -85,6 +85,7 @@ let store;
 				store.setRolesAllowed(nextProps.rolesAllowed);
 			}
 			if ((this.props.table != nextProps.table) || (this.props.mode != nextProps.mode) || (this.props.docId != nextProps.docId) || (this.props.includeFields != nextProps.includeFields) || (this.props.providedLookupList != nextProps.providedLookupList)) {
+				console.log('this=',this.props.includeFields,'next=', nextProps.includeFields)
 				store.changeDoc(nextProps.table, nextProps.mode, nextProps.docId, nextProps.includeFields, nextProps.providedLookupList, tableHandle)
 			}
 		}
@@ -215,6 +216,7 @@ let store;
 	}
 
 	render() {
+		console.log(this.props.customFields)
 		let headerText = _.upperCase(store.mode + store.table);
 		console.log(store.rowWidth, store.rowHeight);
 		if (store.mode=='error') {
@@ -230,11 +232,11 @@ let store;
 				</div>
 				<div className="widget widget-1col">
 					{store.fields.map((v) => {
-						if (this.props.customFields[v]===undefined) {
+						if (this.props.customFields[v.name]===undefined) {
 							return fieldRenderer(v, store.fieldsValue, store.fieldsErr, tableHandle, store.mode, store.searchText, store.lookupList)
 						}
 						else {
-							return this.props.customFields[v];
+							return this.props.customFields[v.name];
 						}
 
 					})}

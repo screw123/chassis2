@@ -26,6 +26,7 @@ class Store {
 	@observable docMode = ''; //control new/edit/view/etc in doc mode
 	@observable table = '';
 	@observable docId = '';
+	@observable includeFields = ['_id', 'batchId', 'batchDesc', 'journalDate', 'userId', 'userName', 'user', 'organization','projectId','projectCode','project','businessId','businessCode','business','relatedDocType','relatedDocId','COAId','COADesc','COA','COAAcctType','COAisDebit','COAsubcat1','COAsubcat2','fiscalYear','fiscalPeriod','journalType','journalDesc','EXCurrency','EXRate','EXAmt','amt','supportDoc','createAt'];
 	@observable lookupList = {};
 
 	@action updatelookupList(b) { this.lookupList = {organization: b} }
@@ -98,10 +99,9 @@ let tableHandle;
 	}
 
 	getCustomComponent() {
-		console.log(docLoadStore)
 		return ({
-			'amt':
-				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={50} floatingLabelText={tableHandle.schema['amt'].label} disabled={docLoadStore.mode=='view'} onChange={(e) => updateVal(docLoadStore.fieldsValue, docLoadStore.fieldsErr, 'currency', 'amt', e.target.value, tableHandle)} errorText={docLoadStore.fieldsErr['amt']} />
+			'amat':
+				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={docLoadStore.fieldsValue['EXAmt']* docLoadStore.fieldsValue['EXRate'] } floatingLabelText={tableHandle.schema['amt'].label} disabled={true} />
 		})
 	}
 
@@ -135,7 +135,7 @@ let tableHandle;
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
-						includeFields={['_id','batchId','batchDesc','journalDate','userId','userName','user','organization','projectId','projectCode','project','businessId','businessCode','business','relatedDocType','relatedDocId','COAId','COADesc','COA','COAAcctType','COAisDebit','COAsubcat1','COAsubcat2',,'fiscalYear','fiscalPeriod','journalType','journalDesc','EXCurrency','EXRate','EXAmt','amt','supportDoc','createAt']}
+						includeFields={store.includeFields}
 						customFields={this.getCustomComponent()}
 						providedLookupList={store.lookupList}
 						docListPath={'/claims/ClaimTest/'}
