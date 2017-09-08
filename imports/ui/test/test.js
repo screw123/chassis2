@@ -72,12 +72,16 @@ const store = new Store();
 
 	}
 
+	test_acct_post() {
+		
+	}
+
 	render() {
 		return (
 			<div>
 				<RaisedButton label="Run1" secondary={true} onTouchTap={() =>
 					{
-						this.testF();
+						this.test_acct_post();
 					}}
 				/>
 				{store.msg}

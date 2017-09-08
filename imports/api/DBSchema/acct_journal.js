@@ -1,6 +1,7 @@
 import { Mongo } from 'meteor/mongo';
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random'
+import { check } from 'meteor/check'
 
 import { SimpleSchema } from 'meteor/aldeed:simple-schema';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
@@ -43,8 +44,6 @@ export const acctJournalSchema = {
 	EXAmt: { type: Number, decimal: true, label: '外幣金額' },
 	amt: { type: Number, label: '結算金額', decimal: true, autoValue: function() {
 		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet)) {
-			console.log('autoValue for accct_journal.amt!', this.field("EXRate"), this.siblingField("EXRate"))
-			console.log('value=', this.field("EXRate").value * this.field("EXAmt").value)
 			return this.field("EXRate").value * this.field("EXAmt").value
 		}
 	}},
@@ -237,8 +236,38 @@ if (Meteor.isServer) {
 
 		return d_cursor;
 	});
+
+	Meteor.publish
 }
 
 export default acctJournal;
 
 //Schema specific methods as below
+export const postNewJournal = new ValidatedMethod({
+	name: 'acctJournal.postNewJournal',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate({batchDesc, journalDate, organization, projectId, businessId, relatedDocType, relatedDocId, journalType, supportDoc, fiscalYear, fiscalPeriod, entries}) {
+		try {
+			check(batchDesc, String);
+			if (batchDesc.length < 5) { throw new Error() }
+		} catch(e) { throw new ValidationError('記錄原因錯誤, 請正確填寫記錄原因') }
+		try {
+			check(journalDate, Date);
+		} catch(e) { throw new ValidationError('記錄日期錯誤, 請正確填寫記錄日期') }
+		try {
+			check(organization, String);
+			if (batchDesc.length < 5) { throw new Error() }
+		} catch(e) { throw new ValidationError('記錄原因錯誤, 請正確填寫記錄原因') }
+
+	},
+	run({batchDesc, journalDate, organization, projectId, businessId, relatedDocType, relatedDocId, journalType, supportDoc, fiscalYear, fiscalPeriod, entries}) {
+		if (Meteor.isServer) {
+			try { return acctJournal.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
+			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
+		}
+	}
+});
