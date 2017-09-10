@@ -254,14 +254,38 @@ export const postNewJournal = new ValidatedMethod({
 		try {
 			check(batchDesc, String);
 			if (batchDesc.length < 5) { throw new Error() }
-		} catch(e) { throw new ValidationError('記錄原因錯誤, 請正確填寫記錄原因') }
+		} catch(e) { throw new ValidationError('請正確填寫記錄原因') }
 		try {
 			check(journalDate, Date);
-		} catch(e) { throw new ValidationError('記錄日期錯誤, 請正確填寫記錄日期') }
+		} catch(e) { throw new ValidationError('請正確填寫記錄日期') }
 		try {
 			check(organization, String);
-			if (batchDesc.length < 5) { throw new Error() }
-		} catch(e) { throw new ValidationError('記錄原因錯誤, 請正確填寫記錄原因') }
+		} catch(e) { throw new ValidationError('請正確填寫所屬公司') }
+		try {
+			check(projectId, String);
+		} catch(e) { throw new ValidationError('請正確填寫項目') }
+		try {
+			check(businessId, String);
+		} catch(e) { throw new ValidationError('請正確填寫業務') }
+		try {
+			check(relatedDocType, String);
+		} catch(e) { throw new ValidationError('請正確填寫相關檔案類型') }
+		try {
+			check(relatedDocId, String);
+		} catch(e) { throw new ValidationError('請正確填寫相關檔案編號') }
+		try {
+			if (supportDoc.length > 0) { check(supportDoc, String) }
+		} catch(e) { throw new ValidationError('請正確提供檔案') }
+		try {
+			check(businessId, String);
+		} catch(e) { throw new ValidationError('請正確填寫業務') }
+		try {
+			check(fiscalYear, Number);
+		} catch(e) { throw new ValidationError('請正確填寫會計年度') }
+		try {
+			check(fiscalPeriod, Number);
+		} catch(e) { throw new ValidationError('請正確填寫會計月份') }
+
 
 	},
 	run({batchDesc, journalDate, organization, projectId, businessId, relatedDocType, relatedDocId, journalType, supportDoc, fiscalYear, fiscalPeriod, entries}) {
