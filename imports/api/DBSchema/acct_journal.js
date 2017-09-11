@@ -23,8 +23,11 @@ export const acctJournalSchema = {
 	projectCode: {type: String, label: '項目名稱', optional: true},
 	businessId: { type: String, label: '所屬業務', optional: true, regEx: SimpleSchema.RegEx.Id },
 	businessCode: {type: String, label: '業務名稱', optional: true},
-	relatedDocType: {type: String, label: '相關文件種類', optional: true},
-	relatedDocId: {type: String, label: '相關文件編號', optional: true, regEx: SimpleSchema.RegEx.Id},
+
+	fiscalYear: { type: Number, label: '會計年度' },
+	fiscalPeriod: { type: Number, label: '會計期間' },
+
+	journalType: { type: String, label: '記錄類別', min: 3, max: 3},
 
 	COAId: { type: String, label: '記錄科目', regEx: SimpleSchema.RegEx.Id },
 	COADesc: { type: String, label: '科目名稱' },
@@ -33,10 +36,8 @@ export const acctJournalSchema = {
 	COAsubcat1: {type: String, label: '科目分類1', allowedValues: ['BANK', 'AR', 'AP', 'INV', 'LOAN', 'PREPAY-IN', 'PREPAY-OUT', 'FA', 'FA-DEPRE', 'ACCRUAL', 'OTHER-BS', 'GP', 'OPEX', 'OTHER-PL', 'TAX', 'PL-DEPRE'] },
 	COAsubcat2: {type: String, label: '科目分類2', optional: true},
 
-	fiscalYear: { type: Number, label: '會計年度' },
-	fiscalPeriod: { type: Number, label: '會計期間' },
-
-	journalType: { type: String, label: '記錄類別', min: 3, max: 3},
+	relatedDocType: {type: String, label: '相關文件種類', optional: true},
+	relatedDocId: {type: String, label: '相關文件編號', optional: true, regEx: SimpleSchema.RegEx.Id},
 
 	journalDesc: { type: String, label: '個別記錄原因', optional: true },
 	EXCurrency: { type: String, label: '貨幣', min: 3, max: 3 },
@@ -241,57 +242,3 @@ if (Meteor.isServer) {
 }
 
 export default acctJournal;
-
-//Schema specific methods as below
-export const postNewJournal = new ValidatedMethod({
-	name: 'acctJournal.postNewJournal',
-	mixins:  [LoggedInMixin, CallPromiseMixin],
-	checkLoggedInError: {
-		error: 'notLoggedIn',
-		message: '用戶未有登入'
-	},
-	validate({batchDesc, journalDate, organization, projectId, businessId, relatedDocType, relatedDocId, journalType, supportDoc, fiscalYear, fiscalPeriod, entries}) {
-		try {
-			check(batchDesc, String);
-			if (batchDesc.length < 5) { throw new Error() }
-		} catch(e) { throw new ValidationError('請正確填寫記錄原因') }
-		try {
-			check(journalDate, Date);
-		} catch(e) { throw new ValidationError('請正確填寫記錄日期') }
-		try {
-			check(organization, String);
-		} catch(e) { throw new ValidationError('請正確填寫所屬公司') }
-		try {
-			check(projectId, String);
-		} catch(e) { throw new ValidationError('請正確填寫項目') }
-		try {
-			check(businessId, String);
-		} catch(e) { throw new ValidationError('請正確填寫業務') }
-		try {
-			check(relatedDocType, String);
-		} catch(e) { throw new ValidationError('請正確填寫相關檔案類型') }
-		try {
-			check(relatedDocId, String);
-		} catch(e) { throw new ValidationError('請正確填寫相關檔案編號') }
-		try {
-			if (supportDoc.length > 0) { check(supportDoc, String) }
-		} catch(e) { throw new ValidationError('請正確提供檔案') }
-		try {
-			check(businessId, String);
-		} catch(e) { throw new ValidationError('請正確填寫業務') }
-		try {
-			check(fiscalYear, Number);
-		} catch(e) { throw new ValidationError('請正確填寫會計年度') }
-		try {
-			check(fiscalPeriod, Number);
-		} catch(e) { throw new ValidationError('請正確填寫會計月份') }
-
-
-	},
-	run({batchDesc, journalDate, organization, projectId, businessId, relatedDocType, relatedDocId, journalType, supportDoc, fiscalYear, fiscalPeriod, entries}) {
-		if (Meteor.isServer) {
-			try { return acctJournal.find(Object.assign({}, publishSpec.find((i) => { return i.name===query }).filter, filter)).count() }
-			catch(err) { throw new Meteor.Error('qty-failed', err.message) }
-		}
-	}
-});
