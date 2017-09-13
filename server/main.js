@@ -14,6 +14,8 @@ import '../imports/api/DBSchema/project.js';
 import '../imports/api/DBSchema/status.js';
 import '../imports/api/DBSchema/user.js';
 
+import '../imports/api/acct_module/gl.js';
+
 import '../imports/api/webio/Slack.js';
 
 

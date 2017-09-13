@@ -17,6 +17,8 @@ import FileSaver from 'file-saver';
 import Claims, { ClaimsView, newClaim } from '../../api/DBSchema/claims.js';
 import Status from '../../api/DBSchema/status.js';
 
+import { postNewJournal } from '../../api/acct_module/gl.js';
+
 class Store {
 	@observable msg = '';
 	@action setMsg(m) { this.msg = m}
@@ -72,8 +74,41 @@ const store = new Store();
 
 	}
 
-	test_acct_post() {
-		
+	async test_acct_post() {
+		const a = await postNewJournal.callPromise({
+			batchDesc: 'test111',
+			journalDate: new Date(),
+			userId: 'dh2Pen4DK2HJxqfyB',
+			organization: 'Nice Car HK',
+			projectId: 'EHeeQmSLiLDG6ezcc',
+			businessId: 'YHS7PQLgz6HQTxSfd',
+			journalType: 'GEN',
+			fiscalYear: 2017,
+			fiscalPeriod: 6,
+			entries: [
+				{
+					COAId: 'y5yKTvBKdT9uAoBSF',
+					journalDesc: 'haha another test',
+					EXCurrency: 'CNY',
+					EXRate: 4,
+					EXAmt: 20,
+					supportDoc: 'http://www.abc.com',
+					relatedDocType: 'Claim',
+					relatedDocId: 'dh2Pen4DK2HJxqfyB'
+				},
+				{
+					COAId: 'y5yKTvBKdT9uAoBSF',
+					journalDesc: 'haha another test2',
+					EXCurrency: 'CNY',
+					EXRate: 1,
+					EXAmt: -100,
+					supportDoc: 'http://www.abc.com',
+					relatedDocType: 'Claim',
+					relatedDocId: 'dh2Pen4DK2HJxqfyB'
+				}
+			]
+		});
+		console.log(a)
 	}
 
 	render() {
