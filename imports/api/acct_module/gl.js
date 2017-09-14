@@ -68,8 +68,7 @@ export const postNewJournal = new ValidatedMethod({
 				for (a of entries) {
 					check(a, {COAId: String, journalDesc: String, EXCurrency: String, EXRate: Number, EXAmt: Number, supportDoc: String, relatedDocType: String, relatedDocId: String})
 				}
-				//const coaList = tableHandles('CoA')['main'].find({_id: {$in: _.map(entries, 'COAId')}, isActive: true}).fetch();
-				const coaList = CoA.find('y5yKTvBKdT9uAoBSF').fetch();
+				const coaList = tableHandles('CoA')['main'].find({_id: {$in: _.map(entries, 'COAId')}, isActive: true}).fetch();
 				let balance = 0;
 				for (a of entries) {
 				//entries: [{COAId, journalDesc, EXCurrency, EXRate, EXAmt, supportDoc, relatedDocType, relatedDocId}]
@@ -78,6 +77,7 @@ export const postNewJournal = new ValidatedMethod({
 						return v['_id'] == a['COAId']
 					})
 					if (acct===undefined) { throw new Meteor.Error('請提供正確簿記內容, 找不到科目, 或科目已被停用')}
+					if ((a.EXRate == 0) || (a.EXAmt == 0)) { throw new Meteor.Error('請提供正確簿記內容, 金額或匯率不能為 0') }
 					balance = balance + (a.EXRate * a.EXAmt * (acct.isDebit ? 1 : -1))
 					newEntries.push({
 						COAId: a.COAId,
@@ -103,9 +103,7 @@ export const postNewJournal = new ValidatedMethod({
 				let u = Meteor.users.findOne(userId);
 				const userName = u.profile.firstName + ' ' + u.profile.lastName;
 
-				//newEntries prepped in validate stage
 				const batchId = acctJournalNextAutoincrement();
-				console.log(batchId);
 				for (a of newEntries) {
 					let d = Object.assign({}, {
 						batchId: batchId,
@@ -136,7 +134,6 @@ export const postNewJournal = new ValidatedMethod({
 						amt: a.amt,
 						supportDoc: a.supportDoc
 					})
-					console.log(d)
 					let q = tableHandles('acctJournal')['main'].insert(d)
 				}
 				return batchId

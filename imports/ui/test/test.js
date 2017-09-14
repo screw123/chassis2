@@ -90,7 +90,7 @@ const store = new Store();
 					COAId: 'y5yKTvBKdT9uAoBSF',
 					journalDesc: 'haha another test',
 					EXCurrency: 'CNY',
-					EXRate: 4,
+					EXRate: 5,
 					EXAmt: 20,
 					supportDoc: 'http://www.abc.com',
 					relatedDocType: 'Claim',
