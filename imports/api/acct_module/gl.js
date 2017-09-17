@@ -155,69 +155,45 @@ export const postReverseJournal = new ValidatedMethod({
 	validate({batchNo, journalDate, fiscalYear, fiscalPeriod, reason}) {
 		try {
 			const batchCount = tableHandles('acctJournal')['main'].find({batchId: batchNo}).count
+			//batchCount < 1 means no GL belongs to that batch number
 			if (batchCount < 1) { throw new Meteor.Error('記錄編號錯誤, 編號不存在') }
 
 			try {
-				check(journalDate, Date);
+				if (journalDate!== undefined) {check(journalDate, Date)}
 			} catch(e) { throw new Meteor.Error('請正確填寫記錄日期') }
-			try { check(fiscalYear, Number) }
+			try {
+				if (fiscalYear !== undefined) {check(fiscalYear, Number)}
+			}
 			catch(e) { throw new Meteor.Error('請正確填寫會計年度') }
-			try { check(fiscalPeriod, Number) }
+			try {
+				if (fiscalPeriod!== undefined) {check(fiscalPeriod, Number) }
+			}
 			catch(e) { throw new Meteor.Error('請正確填寫會計月份') }
 			try {
-				check(reason, String);
-				if (reason.length < 5) { throw new Error() }
+				if (reason!==undefined) {
+					check(reason, String);
+					if (reason.length < 5) { throw new Error() }
+				}
 			} catch(e) { throw new Meteor.Error('請正確填寫記錄原因') }
 		} catch(e) { throw new Meteor.Error(e) }
 	},
 	run({batchNo, journalDate, fiscalYear, fiscalPeriod, reason}) {
+		//batchNo is must, others are optional
 		if (Meteor.isServer) {
 			try {
 				const batchEntries = tableHandles('acctJournal')['main'].find({batchId: batchNo}).fetch()
+
+				const batchId = acctJournalNextAutoincrement();
 				for (a of batchEntries) {
-					const batchId = acctJournalNextAutoincrement();
+					//fixme get the latest fiscal year/fiscal period if not specified
 					let d = Object.assign(a, {
+						_id: undefined,
 						batchId: batchId,
 						journalDate: ((journalDate===undefined) ? new Date() : journalDate),
 						fiscalYear: ((fiscalYear===undefined)? '2017': fiscalYear),
 						fiscalPeriod: ((fiscalPeriod===undefined)? '9': fiscalPeriod),
-						batchDesc: 'Reversal of batch #' + batchNo + ((reason===undefined)? ', reason: ' + reason : '')
+						batchDesc: 'Reversal of batch #' + batchNo + ((reason===undefined)? (', reason: ' + reason) : '')
 					})
-
-				}
-
-				console.log(batchId);
-				for (a of newEntries) {
-					let d = Object.assign({}, {
-						batchId: batchId,
-						batchDesc: batchDesc,
-						journalDate: journalDate,
-						userId: userId,
-						userName: userName,
-						organization: organization,
-						projectId: projectId,
-						projectCode: projectCode,
-						businessId: businessId,
-						businessCode: businessCode,
-						fiscalYear: fiscalYear,
-						fiscalPeriod: fiscalPeriod,
-						journalType: journalType,
-						COAId: a.COAId,
-						COADesc: a.COADesc,
-						COAAcctType: a.COAAcctType,
-						COAisDebit: a.COAisDebit,
-						COAsubcat1: a.COAsubcat1,
-						COAsubcat2: a.COAsubcat2,
-						relatedDocType: a.relatedDocType,
-						relatedDocId: a.relatedDocId,
-						journalDesc: a.journalDesc,
-						EXCurrency: a.EXCurrency,
-						EXRate: a.EXRate,
-						EXAmt: a.EXAmt,
-						amt: a.amt,
-						supportDoc: a.supportDoc
-					})
-					console.log(d)
 					let q = tableHandles('acctJournal')['main'].insert(d)
 				}
 				return batchId

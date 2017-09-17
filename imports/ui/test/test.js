@@ -17,7 +17,7 @@ import FileSaver from 'file-saver';
 import Claims, { ClaimsView, newClaim } from '../../api/DBSchema/claims.js';
 import Status from '../../api/DBSchema/status.js';
 
-import { postNewJournal } from '../../api/acct_module/gl.js';
+import { postNewJournal, postReverseJournal } from '../../api/acct_module/gl.js';
 
 class Store {
 	@observable msg = '';
@@ -111,12 +111,19 @@ const store = new Store();
 		console.log(a)
 	}
 
+	async test_acct_reverse() {
+		const a = await postReverseJournal.callPromise({
+			batchNo: 9
+		});
+		console.log(a)
+	}
+
 	render() {
 		return (
 			<div>
 				<RaisedButton label="Run1" secondary={true} onTouchTap={() =>
 					{
-						this.test_acct_post();
+						this.test_acct_reverse();
 					}}
 				/>
 				{store.msg}
