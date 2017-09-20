@@ -5,7 +5,9 @@
 //4. subline edit has to be full line.  Therefore subtable should be as slim as possible
 //5. Adding autocomplete to DocLoad needs to also add the underlying 2 fields as well, they will be automatically hidden
 
-import acctJournal, {acctJournalSchema, acctJournalView, newAcctJournal, updateAcctJournal, deleteAcctJournal, downloadAcctJournal, qtyAcctJournal} from './acct_journal.js'
+import acctJournal, {acctJournalSchema, acctJournalView, newAcctJournal, updateAcctJournal, deleteAcctJournal, downloadAcctJournal, qtyAcctJournal} from './acct_journal.js';
+
+import arap, {arapSchema, arapView, newArap, updateArap, deleteArap, downloadArap, qtyArap} from './arap.js';
 
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
 
@@ -34,6 +36,18 @@ export const tableHandles = (c) => {
 				'download': downloadAcctJournal,
 				'count': qtyAcctJournal,
 				'singleDoc': 'acctJournal.getAcctJournal'
+			};
+		case 'arap':
+			return {
+				'main': arap,
+				'schema': Object.assign({}, arapSchema, {'_id': {label: 'ID'}}),
+				'view': arapView,
+				'new': newArap,
+				'update': updateArap,
+				'delete': deleteArap,
+				'download': downloadArap,
+				'count': qtyArap,
+				'singleDoc': 'arap.getArap'
 			};
 		case 'business':
 			return {
