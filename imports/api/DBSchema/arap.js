@@ -71,7 +71,7 @@ export const arapView = {
 	'arapType': 'text',
 	'partyId': 'sysID',
 	'partyName': 'text',
-	'party': {type: 'autocomplete', key: 'userName', value: 'userId', 'link': { 'q': 'user.list', 'text': "userName", "value": "_id" } }, //fixme when partymaster schema is defined
+	'party': {type: 'autocomplete', key: 'partyName', value: 'partyId', 'link': { 'q': 'partymaster.list', 'text': "name", "value": "_id" } },
 
 	'invoiceDate': 'date',
 	'payterm': 'text',
@@ -96,7 +96,7 @@ export const arapView = {
 	'relatedDocType': 'text',
 	'relatedDocId': 'text', //so it can be edited in admin panel
 
-	'remarks': 'longtext',
+	'remarks': 'longText',
 
 	'EXCurrency': 'text',
 	'EXRate': 'decimal',

@@ -26,7 +26,7 @@ export const arapHistorySchema = {
 			return this.field("EXRate").value * this.field("EXAmt").value
 		}
 	}},
-	latestOutstandingAmt: { type: Number, label: '本幣尚欠金額'}
+	latestOutstandingAmt: { type: Number, label: '本幣尚欠金額'},
 
 	supportDoc: { type: String, label: '上傳檔案', regEx: SimpleSchema.RegEx.Url, optional: true},
 

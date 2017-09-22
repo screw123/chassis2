@@ -9,6 +9,8 @@ import acctJournal, {acctJournalSchema, acctJournalView, newAcctJournal, updateA
 
 import arap, {arapSchema, arapView, newArap, updateArap, deleteArap, downloadArap, qtyArap} from './arap.js';
 
+import arapHistory, {arapHistorySchema, arapHistoryView, newArapHistory, updateArapHistory, deleteArapHistory, downloadArapHistory, qtyArapHistory} from './arapHistory.js';
+
 import Business, {BusinessSchema, BusinessView, newBusiness, updateBusiness, deleteBusiness, downloadBusiness, qtyBusiness} from './business.js'
 
 import Claims, {ClaimSchema, ClaimsView, newClaim, updateClaim, deleteClaim, downloadClaim, qtyClaim} from './claims.js';
@@ -18,6 +20,8 @@ import ClaimsHistory, {ClaimsHistorySchema, ClaimsHistoryView, newClaimsHistory,
 import CoA, {CoASchema, CoAView, newCoA, updateCoA, deleteCoA, downloadCoA, qtyCoA} from './COA.js'
 
 import OrgRole, {OrgRoleSchema, OrgRoleView, newOrgRole, updateOrgRole, deleteOrgRole, downloadOrgRole, qtyOrgRole} from './OrgRole.js'
+
+import partymaster, {partymasterSchema, partymasterView, newpartymaster, updatepartymaster, deletepartymaster, downloadpartymaster, qtypartymaster} from './partymaster.js';
 
 import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
 
@@ -48,6 +52,18 @@ export const tableHandles = (c) => {
 				'download': downloadArap,
 				'count': qtyArap,
 				'singleDoc': 'arap.getArap'
+			};
+		case 'arapHistory':
+			return {
+				'main': arapHistory,
+				'schema': Object.assign({}, arapHistorySchema, {'_id': {label: 'ID'}}),
+				'view': arapHistoryView,
+				'new': newArapHistory,
+				'update': updateArapHistory,
+				'delete': deleteArapHistory,
+				'download': downloadArapHistory,
+				'count': qtyArapHistory,
+				'singleDoc': 'arapHistory.getArapHistory'
 			};
 		case 'business':
 			return {
@@ -108,6 +124,18 @@ export const tableHandles = (c) => {
 				'download': downloadOrgRole,
 				'count': qtyOrgRole,
 				'singleDoc': 'OrgRole.getOrgRole'
+			};
+		case 'partymaster':
+			return {
+				'main': partymaster,
+				'schema': Object.assign({}, partymasterSchema, {'_id': {label: 'ID'}}),
+				'view': partymasterView,
+				'new': newPartymaster,
+				'update': updatePartymaster,
+				'delete': deletePartymaster,
+				'download': downloadPartymaster,
+				'count': qtyPartymaster,
+				'singleDoc': 'partymaster.getPartymaster'
 			};
 		case 'project':
 			return {
