@@ -127,7 +127,12 @@ let store;
 		const subTableValue = store.subTableLines.toJS()
 		//1. convert date from moment to Date()
 		store.fields.forEach((v)=>{
-			if ((v.type=='date')||(v.type=='datetime')) { fieldsValue[v.name] = fieldsValue[v.name].toDate() }
+			if ((v.type=='date')||(v.type=='datetime')) {
+				if ((fieldsValue[v.name]===undefined)||(fieldsValue[v.name]===null)) {
+					fieldsValue[v.name] = undefined
+				}
+				else { fieldsValue[v.name] = fieldsValue[v.name].toDate() }
+			}
 		})
 		store.subTableFields.forEach((v)=>{
 			if ((v.type=='date')||(v.type=='datetime')) {

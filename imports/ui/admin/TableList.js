@@ -18,6 +18,8 @@ import UserChip from '../component/UserChip.js';
 //Custom function import
 import { checkAuth } from '../../api/auth/CheckAuth.js';
 
+import { tableHandles, tableList } from '../../api/DBSchema/DBTOC.js';
+
 //Begin code
 const today = moment();
 
@@ -51,7 +53,7 @@ const store = new Store();
 	componentWillUnmount() {
 	}
 
-	getTables() {
+	getTablesaaa() {
 		return (
 			<List>
 				<ListItem primaryText="Users" onTouchTap={() => { browserHistory.push('/admin/userList')} } />
@@ -66,6 +68,16 @@ const store = new Store();
 				<ListItem primaryText="Account Journal" onTouchTap={() => { browserHistory.push('/admin/DocList/acctJournal')} } />
 				<ListItem primaryText="AR/AP" onTouchTap={() => { browserHistory.push('/admin/DocList/arap')} } />
 				<ListItem primaryText="AR/AP History" onTouchTap={() => { browserHistory.push('/admin/DocList/arapHistory')} } />
+			</List>
+		)
+	}
+
+	getTables() {
+		return (
+			<List>
+				{tableList.map((v) => {
+					return <ListItem primaryText={v} onTouchTap={() => { browserHistory.push('/admin/TableLoad/'+v)}} />
+				})}
 			</List>
 		)
 	}

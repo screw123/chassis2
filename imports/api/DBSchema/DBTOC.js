@@ -27,6 +27,8 @@ import Project, {ProjectSchema, ProjectView, newProject, updateProject, deletePr
 
 import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
 
+export const tableList = ['acctJournal', 'arap', 'arapHistory', 'business', 'claims', 'claimsHistory', 'CoA', 'OrgRole', 'partymaster', 'project', 'status']
+
 export const tableHandles = (c) => {
 	switch(c) {
 		case 'acctJournal':

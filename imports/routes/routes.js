@@ -14,8 +14,7 @@ import EditClaim from '../ui/claims/EditClaim.js'
 import ClaimList from '../ui/claims/ClaimList.js'
 import AdminPortal from '../ui/admin/Admin.js'
 import AdminTableList from '../ui/admin/TableList.js'
-import AdminDocList from '../ui/admin/DocList.js'
-import AdminDocLoad from '../ui/admin/DocLoad.js'
+import AdminTableLoad from '../ui/admin/TableLoad.js'
 import AdminUserList from '../ui/admin/userList.js'
 import ClaimTest from '../ui/claims/ClaimTest.js'
 
@@ -41,8 +40,7 @@ export const renderRoutes = () => (
                 <IndexRoute component={AdminTableList}/>
                 <Route path="TableList" component={AdminTableList} />
                 <Route path="UserList" component={AdminUserList} />
-                <Route path="DocList/:tableName" component={AdminDocList} />
-                <Route path="DocLoad/:tableName/:mode(/:id)" component={AdminDocLoad} />
+                <Route path="TableLoad/:table(/:docMode/:id)" component={AdminTableLoad} />
             </Route>
             <Route path="testaaa" component={Test}/>
             <Route path="*" component={notFound} />

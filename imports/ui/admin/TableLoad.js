@@ -6,19 +6,13 @@ import { observer } from "mobx-react";
 import mobx, { observable, useStrict, action } from 'mobx';
 import { autorunX, observeX } from '../../api/tracker-mobx-autorun.js'
 
-import FileSaver from 'file-saver';
-
 import { checkAuth } from '../../api/auth/CheckAuth.js';
-
-import DocList1 from '../component/DocList1.js';
-import DocLoad1 from '../component/DocLoad1.js';
-import DocLoad1_store from '../component/DocLoad1_store.js'
-import { tableHandles } from '../../api/DBSchema/DBTOC.js';
-import { updateVal } from '../component/DocLoadHelper.js';
 
 import { getUserOrg } from '../../api/DBSchema/user.js';
 
-import TextField from 'material-ui/TextField';
+import DocList1 from '../component/DocList1.js';
+import DocLoad1 from '../component/DocLoad1.js';
+import { tableHandles, tableList } from '../../api/DBSchema/DBTOC.js';
 
 class Store {
 	allowedModes = [undefined, 'new', 'view', 'edit'];
@@ -35,6 +29,7 @@ class Store {
 		switch(docMode) {
 			case undefined:
 				this.mode = 'docList';
+				this.table = table;
 				break;
 			case 'new':
 			case 'edit':
@@ -59,7 +54,7 @@ let tableHandle;
 	}
 
 	async verifyUser() {
-		const roles = [];
+		const roles = [{role: 'admin', group: 'SYSTEM'}];
 		try { const a = await checkAuth(roles) }
 		catch(err) {
 			this.props.setCommonDialogMsg(err);
@@ -72,8 +67,9 @@ let tableHandle;
 	async componentWillMount() {
 		if (store.allowedModes.includes(this.props.params.docMode)) {
 			let a = await this.verifyUser();
-			let b = await getUserOrg.callPromise(Meteor.userId());
+			let b = await getUserOrg.callPromise(Meteor.userId()); //fixme to load full org list instead of just user org list
 			store.updatelookupList(b);
+			console.log('comMount', this.props.params.docMode, this.props.params.table, this.props.params.id)
 			store.setMode(this.props.params.docMode, this.props.params.table, this.props.params.id);
 		}
 		else {
@@ -87,6 +83,7 @@ let tableHandle;
 		tableHandle = tableHandles(nextProps.params.table)
 		if (store.allowedModes.includes(nextProps.params.docMode)) {
 			let a = await this.verifyUser();
+			console.log('nextComMount', nextProps.params.docMode, nextProps.params.table, nextProps.params.id)
 			store.setMode(nextProps.params.docMode, nextProps.params.table, nextProps.params.id);
 		}
 		else {
@@ -96,28 +93,22 @@ let tableHandle;
 		}
 	}
 
-	getCustomComponent() {
-		return ({
-			'amat':
-				<TextField key='amt' className="default-textField" name='amt' type="number" hintText="請輸入金額" value={docLoadStore.fieldsValue['EXAmt']* docLoadStore.fieldsValue['EXRate'] } floatingLabelText={tableHandle.schema['amt'].label} disabled={true} />
-		})
-	}
-
 	render() {
+		console.log(store.table)
 		return (
 			<div>
 				{(store.mode=='docList') &&
 					<DocList1
-						cardTitle='所有報銷'
-						table='acctJournal'
-						query='acct_journal.ALL'
+						cardTitle={'數據庫列表 - ' + store.table}
+						table={store.table}
+						query={store.table+'.ALL'}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
 						initLimit={10}
 						allowMultiSelect={false}
 						allowDownload={true}
 						allowDownloadAll={false}
 						allowNewDoc={true}
-						docLoadPath={'/claims/ClaimTest/'}
+						docLoadPath='/admin/TableLoad/'
 						setShowCommonDialog={this.props.setShowCommonDialog}
 						setCommonDialogMsg={this.props.setCommonDialogMsg}
 						setShowSnackBar={this.props.setShowSnackBar}
@@ -131,9 +122,9 @@ let tableHandle;
 						mode={store.docMode}
 						docId={store.docId}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
-						customFields={this.getCustomComponent()}
 						providedLookupList={store.lookupList}
-						docListPath={'/claims/ClaimTest/'}
+						customFields={{}}
+						docListPath={'/admin/TableLoad/'+store.table+'/'}
 						setShowCommonDialog={this.props.setShowCommonDialog}
 						setCommonDialogMsg={this.props.setCommonDialogMsg}
 						setShowSnackBar={this.props.setShowSnackBar}
