@@ -51,7 +51,7 @@ export const updateProfile = new ValidatedMethod({
 	run({id, args}) {
 		if (Meteor.isServer) {
 			try {
-				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
+				if (!Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) {
 					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to update profile.') }
 				}
 				Meteor.users.update({_id: id}, {$set: args}); //this is only for profile
@@ -74,9 +74,13 @@ export const updateRole = new ValidatedMethod({
 		message: '用戶未有登入'
 	},
 	validate() { },
-	run({id, args}) {
+	run({id, args}) { //args should be an object like {org1:[role1,role2], org2:[]} etc
 		if (Meteor.isServer) {
-			try { Roles.setUserRoles(id, args) }
+			try {
+				console.log('adding roles, args=', args)
+				if (args===undefined) { throw new Meteor.Error('Roles is undefined.') }
+				for (org in args) { Roles.setUserRoles(id, args[org], org) }
+			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
 		}
 	}
@@ -92,13 +96,15 @@ export const updateEmail = new ValidatedMethod({
 	validate() { },
 	run({id, args}) {
 		if (Meteor.isServer) {
+			console.log('updateEmail: ', id, args)
 			try {
-				if (!Roles.userIsInRole(this.userId, 'system.admin')) {
+				if (!Roles.userIsInRole(this.userId, 'admin', 'SYSTEM')) {
 					if (id != this.userId) { throw new Meteor.Error('update-failed', 'not authorized to update email.') }
 				}
 				const oldEmail = Meteor.users.findOne({_id: id}).emails[0].address
-				Accounts.addEmail(id, args, true);
 				Accounts.removeEmail(id, oldEmail);
+				Accounts.addEmail(id, args, true);
+
 			}
 			catch(err) { throw new Meteor.Error('update-failed', err.message) }
 		}

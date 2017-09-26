@@ -42,7 +42,9 @@ import { checkAuth } from '../../api/auth/CheckAuth.js';
 //Custom Schema import
 import { tableHandles } from '../../api/DBSchema/DBTOC.js';
 import { updateProfile, updateRole, updateEmail, resetPassword } from '../../api/DBSchema/user.js';
-import { userRole2Str } from '../../api/helper.js'
+import { userRole2Str } from '../../api/helper.js';
+
+import { cellRenderer } from '../component/DocListHelper.js';
 
 //Begin code
 let dataTable;
@@ -55,7 +57,7 @@ let tableHandle = {
 				"profile.firstName": { type: String, label: '姓' },
 				"profile.lastName": { type: String, label: '名' },
 				"profile.slackUserName": { type: String, label: 'Slack 用戶名稱' },
-				"roles": {type: [String], label: '權限'},
+				"roles": {type: [Object], label: '權限'},
 				"createdAt": {type: Date, label: "創建日期"},
 				"isActive": {type: Boolean, label: "活躍用戶"}
 			},
@@ -75,6 +77,11 @@ let tableHandle = {
 				checkLoggedInError: {
 					error: 'notLoggedIn',
 					message: '用戶未有登入'
+				},
+				checkRoles: {
+					roles: ['admin'],
+					group: 'SYSTEM',
+					rolesError: { error: 'accessDenied', message: '用戶權限不足'}
 				},
 				validate() { },
 				run() {
@@ -144,8 +151,26 @@ class editDialog {
 	@action setShow(b) { this.show = b }
 	@action setCurrentDocIndex(i) { this.currentDocIndex = i }
 	@action updateVal(v, newVar) { this.profile[v] = newVar }
-	@action removeRole(r) { this.profile['roles'].splice(this.profile['roles'].findIndex((a)=> { return a==r}), 1)}
-	@action addRole(r) { this.profile['roles'].push(r) }
+	@action removeRole(o,r) { this.profile['roles'][o].splice(this.profile['roles'][o].findIndex((a)=> { return a==r}), 1)}
+	@action addRole(v) {
+		const a = v.split('@');
+		console.log('addRole.a=',a)
+		if (a.length==2) {
+			if (this.profile['roles'][a[1]]===undefined) {
+				this.profile['roles'][a[1]] = [a[0]]
+			}
+			else { this.profile['roles'][a[1]].push(a[0]) }
+		}
+		console.log(this.profile['roles'])
+		// if ((this.currentOrg!==undefined)&&(this.currentOrg!='')) {
+		// 	if ((this.currentRole!==undefined)&&(this.currentRole!='')) {
+		// 		if (this.profile['roles'][this.currentOrg]===undefined) {
+		// 			this.profile['roles'][this.currentOrg] = [this.currentRole]
+		// 		}
+		// 		else { this.profile['roles'][this.currentOrg].push(this.currentRole) }
+		// 	}
+		// }
+	}
 }
 const ed = new editDialog();
 
@@ -196,7 +221,7 @@ let sync_DBList = null;
 	handleDownloadCSV(a) {
 		const csv = Papa.unparse(a);
 		const b = new Blob([csv], { type: "text/plain;charset=utf-8;" });
-      	FileSaver.saveAs(b, store.DBListQuery+".csv");
+      	FileSaver.saveAs(b, "Users.csv");
 	}
 
 	async handleDownloadCSVAll() {
@@ -204,63 +229,20 @@ let sync_DBList = null;
 		this.handleDownloadCSV(a);
 	}
 
-	cellRenderer(isHeader, value, fieldView, key, field) {
-		const contentType = (isHeader)?'header':'content'
-		if (isHeader) {
-			switch(fieldView) {
-				case 'sysID':
-				case 'numID':
-				case 'date':
-				case 'datetime':
-				case 'text':
-				case 'longText':
-				case 'currency':
-				case 'integer':
-				case 'decimal':
-				case 'url':
-				case 'status':
-				case 'user':
-				case 'boolean':
-				case 'array':
-				case 'roles':
-					return <div key={key} style={fieldStyle[fieldView][contentType]}> { value } </div>;
-				case 'icon':
-					return <div> Error: please manually handle icons </div>;
-				default:
-					return 'Error: fieldView unknown';
-			}
-		} else {
-			switch(fieldView) {
-				case 'sysID':
-				case 'numID':
-				case 'integer':
-				case 'decimal':
-				case 'url':
-				case 'text':
-				case 'longText':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > { value } </div>;
-				case 'icon':
-					return <div> Error: please manually handle icons </div>;
-				case 'date':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > {(value==undefined) ? '---' :  moment(value).format("YYYY-MM-DD") } </div>
-				case 'datetime':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > {(value==undefined) ? '---' :  moment(value).format("YYYY-MM-DD HH:mm") } </div>
-				case 'currency':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{accounting.formatColumn([value,"999999"], "$", 2)[0] } </div>
-				case 'status':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{value}</div>;
-				case 'user':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} ><UserChip userId={value} /></div>;
-				case 'boolean':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} >{(value)? <FontIcon className="fa fa-check" /> : <FontIcon className="fa fa-times" />}</div>;
-				case 'array':
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > { value.toJS().toString() } </div>;
-				case 'roles': //roles is object of arrays
-					return <div key={key} style={fieldStyle[fieldView][contentType]} > { userRole2Str(value) } </div>;
-				default:
-					return 'Error: fieldView unknown';
+	getRoles() {
+		let v = [];
+		for (o in ed.profile['roles']) {
+			for (r of ed.profile['roles'][o]) {
+				v.push(
+					<ListItem
+						primaryText={r+'@'+o} key={r+'@'+o}
+						rightIcon={<FontIcon className="fa fa-trash" onTouchTap={()=> {ed.removeRole(o,r)}} />}
+					 />
+				 )
 			}
 		}
+		console.log(v);
+		return v;
 	}
 
 	rowRenderer({ index, isScrolling, key, style }) {
@@ -278,9 +260,9 @@ let sync_DBList = null;
 				{store.tableView.map((a, index) => {
 					if (a.includes('.')) {
 						const b = a.split('.')
-						return this.cellRenderer(false, row[b[0]][b[1]], tableHandle['view'][a], key+'-'+index)
+						return cellRenderer(false, row[b[0]][b[1]], tableHandle['view'][a], key+'-'+index)
 					}
-					else { return this.cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index) }
+					else { return cellRenderer(false, row[a], tableHandle['view'][a], key+'-'+index) }
 				})}
 				<IconMenu
 					style={{height: '24px'}}
@@ -318,7 +300,7 @@ let sync_DBList = null;
 				slackUserName: ed.profile['slackUserName']
 			}, isActive: ed.profile['isActive'] }});
 			updateEmail.callPromise({id: userIdToUpdate, args: ed.profile['email']});
-			updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles'].toJS()});
+			updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles']});
 		} catch(err) {
 			this.props.setCommonDialogMsg('ui/admin/userList.js {main.saveChange} ' + err.toString());
 			this.props.setShowCommonDialog(true);
@@ -361,7 +343,7 @@ let sync_DBList = null;
 								}}>
 									{({ measureRef }) => (
 										<div ref={measureRef} className="datatable_headerRow">
-											{store.tableView.map((a) => this.cellRenderer(true, tableHandle['schema'][a].label, tableHandle['view'][a], a+'_head', a))}
+											{store.tableView.map((a) => cellRenderer(true, tableHandle['schema'][a].label, tableHandle['view'][a], a+'_head', a))}
 											<div style={fieldStyle.icon.header}></div>
 										</div>
 									)}
@@ -386,6 +368,7 @@ let sync_DBList = null;
 								<RaisedButton label="Cancel" className="button" primary={true} onTouchTap={() => ed.setShow(false)} />
 							]}
 							modal={true}
+							autoScrollBodyContent={true}
 							open={ed.show}
 							onRequestClose={() => ed.setShow(false)}
 						>
@@ -401,9 +384,9 @@ let sync_DBList = null;
 								<Checkbox name='isActive' label='活躍用戶' checked={ed.profile['isActive']} onCheck={(e, isInputChecked) => ed.updateVal('isActive', isInputChecked)}/>
 								<h3>權限</h3>
 								<ListM>
-									{ed.profile['roles'].map((a)=> {
-										return <ListItem primaryText={a} rightIcon={<FontIcon className="fa fa-trash" onTouchTap={()=> {ed.removeRole(a)}} />} />}
-									)}
+									{
+										this.getRoles()
+									}
 								</ListM>
 								<TextField className="default-textField" name='addRoles' hintText="請輸入文字" value={ed.profile['rolesField']} floatingLabelText='新增權限' onChange={(e) => ed.updateVal('rolesField', e.target.value)} onKeyPress={(e) => {
 									if (e.charCode === 13) { // enter key pressed

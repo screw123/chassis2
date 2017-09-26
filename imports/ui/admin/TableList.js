@@ -53,35 +53,6 @@ const store = new Store();
 	componentWillUnmount() {
 	}
 
-	getTablesaaa() {
-		return (
-			<List>
-				<ListItem primaryText="Users" onTouchTap={() => { browserHistory.push('/admin/userList')} } />
-				<ListItem primaryText="Claims" onTouchTap={() => { browserHistory.push('/admin/DocList/claims')} } />
-				<ListItem primaryText="ClaimsHistory" onTouchTap={() => { browserHistory.push('/admin/DocList/claimsHistory')} } />
-
-				<ListItem primaryText="Business" onTouchTap={() => { browserHistory.push('/admin/DocList/business')} } />
-				<ListItem primaryText="Project" onTouchTap={() => { browserHistory.push('/admin/DocList/project')} } />
-				<ListItem primaryText="CoA" onTouchTap={() => { browserHistory.push('/admin/DocList/CoA')} } />
-				<ListItem primaryText="Status" onTouchTap={() => { browserHistory.push('/admin/DocList/status')} } />
-				<ListItem primaryText="OrgRole" onTouchTap={() => { browserHistory.push('/admin/DocList/OrgRole')} } />
-				<ListItem primaryText="Account Journal" onTouchTap={() => { browserHistory.push('/admin/DocList/acctJournal')} } />
-				<ListItem primaryText="AR/AP" onTouchTap={() => { browserHistory.push('/admin/DocList/arap')} } />
-				<ListItem primaryText="AR/AP History" onTouchTap={() => { browserHistory.push('/admin/DocList/arapHistory')} } />
-			</List>
-		)
-	}
-
-	getTables() {
-		return (
-			<List>
-				{tableList.map((v) => {
-					return <ListItem primaryText={v} onTouchTap={() => { browserHistory.push('/admin/TableLoad/'+v)}} />
-				})}
-			</List>
-		)
-	}
-
 	render() {
 		return (
 			<div>
@@ -90,7 +61,12 @@ const store = new Store();
 				</div>
 				<div className="row-left">
 					<h3>數據庫列表</h3>
-					{this.getTables()}
+					<List>
+						{tableList.map((v) => {
+							return <ListItem primaryText={v} onTouchTap={() => { browserHistory.push('/admin/TableLoad/'+v)}} />
+						})}
+						<ListItem primaryText='Users' onTouchTap={() => { browserHistory.push('/admin/UserList/')}} />
+					</List>
 				</div>
 			</div>
 		)
