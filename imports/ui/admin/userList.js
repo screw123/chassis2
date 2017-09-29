@@ -5,7 +5,7 @@ import { Session } from 'meteor/session';
 import { ValidatedMethod } from 'meteor/mdg:validated-method';
 import { browserHistory, Link } from 'react-router';
 import { observer } from "mobx-react";
-import mobx, { observable, useStrict, action } from 'mobx';
+import mobx, { observable, useStrict, action, toJS } from 'mobx';
 import { autorunX, observeX } from '../../api/tracker-mobx-autorun'
 useStrict(true);
 //Material-ui import
@@ -161,15 +161,7 @@ class editDialog {
 			}
 			else { this.profile['roles'][a[1]].push(a[0]) }
 		}
-		console.log(this.profile['roles'])
-		// if ((this.currentOrg!==undefined)&&(this.currentOrg!='')) {
-		// 	if ((this.currentRole!==undefined)&&(this.currentRole!='')) {
-		// 		if (this.profile['roles'][this.currentOrg]===undefined) {
-		// 			this.profile['roles'][this.currentOrg] = [this.currentRole]
-		// 		}
-		// 		else { this.profile['roles'][this.currentOrg].push(this.currentRole) }
-		// 	}
-		// }
+		console.log('eD.addRole', this.profile['roles'])
 	}
 }
 const ed = new editDialog();
@@ -292,6 +284,7 @@ let sync_DBList = null;
 	}
 
 	saveChange() {
+		console.log('userList.saveChange', ed.profile["roles"])
 		try {
 			let userIdToUpdate = store.DBList[ed.currentDocIndex]['_id']
 			updateProfile.callPromise({id: userIdToUpdate, args: {profile: {
@@ -300,12 +293,13 @@ let sync_DBList = null;
 				slackUserName: ed.profile['slackUserName']
 			}, isActive: ed.profile['isActive'] }});
 			updateEmail.callPromise({id: userIdToUpdate, args: ed.profile['email']});
-			updateRole.callPromise({id: userIdToUpdate, args: ed.profile['roles']});
+			updateRole.callPromise({id: userIdToUpdate, args: toJS(ed.profile['roles'])});
 		} catch(err) {
 			this.props.setCommonDialogMsg('ui/admin/userList.js {main.saveChange} ' + err.toString());
 			this.props.setShowCommonDialog(true);
 			store.submitting(false);
 		}
+		ed.updateVal('rolesField', '');
 		this.props.setSnackBarMsg('Save successful');
 		this.props.setSnackBarAction({}, '');
 		this.props.setShowSnackBar(true);
@@ -392,6 +386,7 @@ let sync_DBList = null;
 									if (e.charCode === 13) { // enter key pressed
 										e.preventDefault();
 										ed.addRole(ed.profile['rolesField'])
+										ed.updateVal('rolesField', '');
 									}
 								}} />
 							</div>
