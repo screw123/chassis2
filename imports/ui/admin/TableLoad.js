@@ -47,7 +47,7 @@ class Store {
 const store = new Store();
 let tableHandle;
 
-@observer export default class ClaimTest extends Component {
+@observer export default class AdminTableLoad extends Component {
 	constructor(props) {
 		super(props);
 		tableHandle = tableHandles(this.props.params.table)
@@ -104,9 +104,10 @@ let tableHandle;
 						query={store.table+'.ALL'}
 						rolesAllowed={[{role: 'admin', group: 'SYSTEM'}]}
 						initLimit={10}
-						allowMultiSelect={false}
+						allowMultiSelect={true}
+						allowMultiDelete={true}
 						allowDownload={true}
-						allowDownloadAll={false}
+						allowDownloadAll={true}
 						allowNewDoc={true}
 						docLoadPath='/admin/TableLoad/'
 						setShowCommonDialog={this.props.setShowCommonDialog}

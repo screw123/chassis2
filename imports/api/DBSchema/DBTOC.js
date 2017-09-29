@@ -21,7 +21,7 @@ import CoA, {CoASchema, CoAView, newCoA, updateCoA, deleteCoA, downloadCoA, qtyC
 
 import OrgRole, {OrgRoleSchema, OrgRoleView, newOrgRole, updateOrgRole, deleteOrgRole, downloadOrgRole, qtyOrgRole} from './OrgRole.js'
 
-import partymaster, {partymasterSchema, partymasterView, newpartymaster, updatepartymaster, deletepartymaster, downloadpartymaster, qtypartymaster} from './partymaster.js';
+import partymaster, {partymasterSchema, partymasterView, newPartymaster, updatePartymaster, deletePartymaster, downloadPartymaster, qtyPartymaster} from './partymaster.js';
 
 import Project, {ProjectSchema, ProjectView, newProject, updateProject, deleteProject, downloadProject, qtyProject} from './project.js'
 

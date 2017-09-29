@@ -63,9 +63,9 @@ const store = new Store();
 					<h3>數據庫列表</h3>
 					<List>
 						{tableList.map((v) => {
-							return <ListItem primaryText={v} onTouchTap={() => { browserHistory.push('/admin/TableLoad/'+v)}} />
+							return <ListItem primaryText={v} onTouchTap={() => { browserHistory.push('/admin/TableLoad/'+v)}} key={v}/>
 						})}
-						<ListItem primaryText='Users' onTouchTap={() => { browserHistory.push('/admin/UserList/')}} />
+						<ListItem primaryText='Users' onTouchTap={() => { browserHistory.push('/admin/UserList/')}} key='Users' />
 					</List>
 				</div>
 			</div>
