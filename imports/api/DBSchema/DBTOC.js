@@ -19,6 +19,8 @@ import ClaimsHistory, {ClaimsHistorySchema, ClaimsHistoryView, newClaimsHistory,
 
 import CoA, {CoASchema, CoAView, newCoA, updateCoA, deleteCoA, downloadCoA, qtyCoA} from './COA.js'
 
+import FiscalPeriod, {FiscalPeriodSchema, FiscalPeriodView, newFiscalPeriod, updateFiscalPeriod, deleteFiscalPeriod, downloadFiscalPeriod, qtyFiscalPeriod} from './fiscalPeriod.js'
+
 import OrgRole, {OrgRoleSchema, OrgRoleView, newOrgRole, updateOrgRole, deleteOrgRole, downloadOrgRole, qtyOrgRole} from './OrgRole.js'
 
 import partymaster, {partymasterSchema, partymasterView, newPartymaster, updatePartymaster, deletePartymaster, downloadPartymaster, qtyPartymaster} from './partymaster.js';
@@ -27,7 +29,7 @@ import Project, {ProjectSchema, ProjectView, newProject, updateProject, deletePr
 
 import Status, {StatusSchema, StatusView, newStatus, updateStatus, deleteStatus, downloadStatus, qtyStatus} from './status.js'
 
-export const tableList = ['acctJournal', 'arap', 'arapHistory', 'business', 'claims', 'claimsHistory', 'CoA', 'OrgRole', 'partymaster', 'project', 'status']
+export const tableList = ['acctJournal', 'arap', 'arapHistory', 'business', 'claims', 'claimsHistory', 'CoA', 'FiscalPeriod', 'OrgRole', 'partymaster', 'project', 'status']
 
 export const tableHandles = (c) => {
 	switch(c) {
@@ -114,6 +116,18 @@ export const tableHandles = (c) => {
 				'download': downloadCoA,
 				'count': qtyCoA,
 				'singleDoc': 'CoA.getCoA'
+			};
+		case 'FiscalPeriod':
+			return {
+				'main': FiscalPeriod,
+				'schema': Object.assign({}, FiscalPeriodSchema, {'_id': {label: 'ID'}}),
+				'view': FiscalPeriodView,
+				'new': newFiscalPeriod,
+				'update': updateFiscalPeriod,
+				'delete': deleteFiscalPeriod,
+				'download': downloadFiscalPeriod,
+				'count': qtyFiscalPeriod,
+				'singleDoc': 'FiscalPeriod.getFiscalPeriod'
 			};
 		case 'OrgRole':
 			return {

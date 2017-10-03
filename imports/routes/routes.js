@@ -40,7 +40,7 @@ export const renderRoutes = () => (
                 <IndexRoute component={AdminTableList}/>
                 <Route path="TableList" component={AdminTableList} />
                 <Route path="UserList" component={AdminUserList} />
-                <Route path="TableLoad/:table(/:docMode/:id)" component={AdminTableLoad} />
+                <Route path="TableLoad/:table(/:docMode)(/:id)" component={AdminTableLoad} />
             </Route>
             <Route path="testaaa" component={Test}/>
             <Route path="*" component={notFound} />

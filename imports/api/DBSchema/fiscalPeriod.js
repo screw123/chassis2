@@ -9,6 +9,7 @@ import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 const FiscalPeriod = new Mongo.Collection('fiscalPeriod');
 
 export const FiscalPeriodSchema = {
+	name: {type: String, label: '會計期名稱'},
 	year: {type: Number, label: '會計年度'},
 	period: {type: String, label: '會計期'},
 	isOpen: {type: Boolean, label: '可入帳'},
@@ -17,6 +18,7 @@ export const FiscalPeriodSchema = {
 
 export const FiscalPeriodView = {
 	'_id': 'sysID',
+	'name': 'text',
 	'year': 'integer',
 	'period': 'text',
 	'isOpen': 'boolean',
@@ -45,7 +47,7 @@ export const newFiscalPeriod = new ValidatedMethod({
 		if (Meteor.isServer) {
 			try {
 				const a = FiscalPeriod.insert(args);
-				return FiscalPeriod.findOne({_id: a}).year+" "+OrgRole.findOne({_id: a}).period
+				return FiscalPeriod.findOne({_id: a}).year+" "+FiscalPeriod.findOne({_id: a}).period
 			}
 			catch(err) { throw new Meteor.Error('insert-failed', err.message) }
 		}
@@ -160,7 +162,7 @@ export const FiscalPeriodList = new ValidatedMethod({
 		if (Meteor.isServer) {
 			try {
 				const a= FiscalPeriod.find({isOpen: true}).fetch();
-				return a.map((v) => {return {"id": v._id, "period": v.year + ' ' + v.period }});
+				return a.map((v) => {return {_id: v._id, name: v.name }});
 			}
 			catch(err) { throw new Meteor.Error('list-fetch-failed', err.message) }
 		}
