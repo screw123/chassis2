@@ -24,7 +24,7 @@ export const postNewJournal = new ValidatedMethod({
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
 	},
-	validate({batchDesc, journalDate, userId, organization, projectId, businessId, journalType, fiscalYear, fiscalPeriod, entries}) {
+	validate({batchDesc, journalDate, userId, organization, projectId, businessId, journalType, fiscalPeriodId, entries}) {
 		//entries: [{COAId, journalDesc, ExCurrency, EXRate, EXAmt, supportDoc, relatedDocType, relatedDocId}]
 		try {
 			check(batchDesc, String);
@@ -51,16 +51,14 @@ export const postNewJournal = new ValidatedMethod({
 			check(businessId, String);
 		} catch(e) { throw new Meteor.Error('請正確填寫業務') }
 
-		try { check(fiscalYear, Number) }
-		catch(e) { throw new Meteor.Error('請正確填寫會計年度') }
-		try { check(fiscalPeriod, Number) }
-		catch(e) { throw new Meteor.Error('請正確填寫會計月份') }
+		try { check(fiscalPeriodId, String) }
+		catch(e) { throw new Meteor.Error('請正確填寫會計期') }
 
 		try {
 			check(entries, [Match.Any]);
 		} catch(e) { throw new Meteor.Error('請提供正確簿記內容') }
 	},
-	run({batchDesc, journalDate, userId, organization, projectId, businessId, journalType, fiscalYear, fiscalPeriod, entries}) {
+	run({batchDesc, journalDate, userId, organization, projectId, businessId, journalType, fiscalPeriodId, entries}) {
 		if (Meteor.isServer) {
 			let newEntries = [];
 			try {
@@ -101,6 +99,7 @@ export const postNewJournal = new ValidatedMethod({
 				const businessCode = tableHandles('business')['main'].findOne(businessId).code
 				let u = Meteor.users.findOne(userId);
 				const userName = u.profile.firstName + ' ' + u.profile.lastName;
+				const fiscalPeriodName = tableHandles('FiscalPeriod')['main'].findOne(fiscalPeriodId).name
 
 				//newEntries prepped in validate stage
 				const batchId = acctJournalNextAutoincrement();
@@ -117,8 +116,8 @@ export const postNewJournal = new ValidatedMethod({
 						projectCode: projectCode,
 						businessId: businessId,
 						businessCode: businessCode,
-						fiscalYear: fiscalYear,
-						fiscalPeriod: fiscalPeriod,
+						fiscalPeriodName: fiscalPeriodName,
+						fiscalPeriodId: fiscalPeriodId,
 						journalType: journalType,
 						COAId: a.COAId,
 						COADesc: a.COADesc,
@@ -152,7 +151,7 @@ export const postReverseJournal = new ValidatedMethod({
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
 	},
-	validate({batchNo, journalDate, fiscalYear, fiscalPeriod, reason}) {
+	validate({batchNo, journalDate, fiscalPeriodId, reason}) {
 		try {
 			const batchCount = tableHandles('acctJournal')['main'].find({batchId: batchNo}).count
 			//batchCount < 1 means no GL belongs to that batch number
@@ -162,13 +161,9 @@ export const postReverseJournal = new ValidatedMethod({
 				if (journalDate!== undefined) {check(journalDate, Date)}
 			} catch(e) { throw new Meteor.Error('請正確填寫記錄日期') }
 			try {
-				if (fiscalYear !== undefined) {check(fiscalYear, Number)}
+				if (fiscalYearId !== undefined) {check(fiscalYearId, String)}
 			}
-			catch(e) { throw new Meteor.Error('請正確填寫會計年度') }
-			try {
-				if (fiscalPeriod!== undefined) {check(fiscalPeriod, Number) }
-			}
-			catch(e) { throw new Meteor.Error('請正確填寫會計月份') }
+			catch(e) { throw new Meteor.Error('請正確填寫會計期') }
 			try {
 				if (reason!==undefined) {
 					check(reason, String);
@@ -177,28 +172,37 @@ export const postReverseJournal = new ValidatedMethod({
 			} catch(e) { throw new Meteor.Error('請正確填寫記錄原因') }
 		} catch(e) { throw new Meteor.Error(e) }
 	},
-	run({batchNo, journalDate, fiscalYear, fiscalPeriod, reason}) {
+	run({batchNo, journalDate, fiscalPeriodId, reason}) {
 		//batchNo is must, others are optional
 		if (Meteor.isServer) {
 			try {
 				const batchEntries = tableHandles('acctJournal')['main'].find({batchId: batchNo}).fetch()
 
 				const batchId = acctJournalNextAutoincrement();
+
+				//if period is specified, use specified, otherwise reverse with current period.  after period decided, if it's undefined, throw error
+				let reverseFisPeriod;
+				if (fiscalPeriodId !== undefined) {
+					reverseFisPeriod = tableHandles('FiscalPeriod')['main'].findOne(fiscalPeriodId)
+				}
+				else { reverseFisPeriod = Meteor.call('FiscalPeriod.currentPeriod') }
+				if (reverseFisPeriod===undefined) { throw new Meteor.error('會計期錯誤: 提供之會計期不存在, 或沒有設置現用會計期')}
+
 				for (a of batchEntries) {
 					//fixme get the latest fiscal year/fiscal period if not specified
 					let d = Object.assign(a, {
 						_id: undefined,
 						batchId: batchId,
 						journalDate: ((journalDate===undefined) ? new Date() : journalDate),
-						fiscalYear: ((fiscalYear===undefined)? '2017': fiscalYear),
-						fiscalPeriod: ((fiscalPeriod===undefined)? '9': fiscalPeriod),
+						fiscalPeriodName: reverseFisPeriod.name,
+						fiscalPeriodId: reverseFisPeriod._id,
 						batchDesc: 'Reversal of batch #' + batchNo + ((reason===undefined)? (', reason: ' + reason) : '')
 					})
 					let q = tableHandles('acctJournal')['main'].insert(d)
 				}
 				return batchId
 			}
-			catch(err) { throw new Meteor.Error('insert-failed', err.message) }
+			catch(err) { throw new Meteor.Error('reverse-failed', err.message) }
 		}
 	}
 });

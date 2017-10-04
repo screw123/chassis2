@@ -27,7 +27,6 @@ export const FiscalPeriodView = {
 
 const publishSpec = [
 	{ 'name': 'FiscalPeriod.ALL', 'filter': {}},
-	{ 'name': 'FiscalPeriod.currentPeriod', 'filter': {activePeriod: true}},
 	{ 'name': 'FiscalPeriod.openPeriod', 'filter': {isOpen: true}},
 ];
 
@@ -165,6 +164,24 @@ export const FiscalPeriodList = new ValidatedMethod({
 				return a.map((v) => {return {_id: v._id, name: v.name }});
 			}
 			catch(err) { throw new Meteor.Error('list-fetch-failed', err.message) }
+		}
+	}
+});
+
+export const CurrentFiscalPeriod = new ValidatedMethod({
+	name: 'FiscalPeriod.currentPeriod',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate() { },
+	run() {
+		if (Meteor.isServer) {
+			try {
+				return FiscalPeriod.findOne({activePeriod: true, isOpen: true})
+			}
+			catch(err) { throw new Meteor.Error('currentPeriod-fetch-failed', err.message) }
 		}
 	}
 });
