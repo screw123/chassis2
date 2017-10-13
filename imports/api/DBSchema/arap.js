@@ -10,8 +10,6 @@ import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 
 const arap = new Mongo.Collection('arap');
 
-export const payTerms = ['CASH', 'COD', 'N07', 'N30', 'N45', 'N60', 'N90'];
-
 export const arapSchema = {
 	arapType: {type: String, label: '應收/付類別', allowedValues: ['AR', 'AP']},
 
@@ -19,7 +17,7 @@ export const arapSchema = {
 	partyName: {type: String, label: '團體名稱'},
 
 	invoiceDate: {type: Date, label: '帳單日期'},
-	payterm: {type: String, label: '數期', allowedValues: payTerms},
+	payterm: {type: String, label: '數期', allowedValues: ['COD', 'N07', 'N15', 'N30', 'N60']},
 	payDueDate: {type: Date, label: '到期日期'},
 
 	userId: {type: String, label: '記錄用戶', regEx: SimpleSchema.RegEx.Id},

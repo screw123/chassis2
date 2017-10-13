@@ -186,4 +186,23 @@ export const CurrentFiscalPeriod = new ValidatedMethod({
 	}
 });
 
+export const isFiscalPeriodActive = new ValidatedMethod({
+	name: 'FiscalPeriod.isFiscalPeriodOpen',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate() { },
+	run(fiscalPeriodId) {
+		if (Meteor.isServer) {
+			try {
+				const a = FiscalPeriod.findOne(fiscalPeriodId)
+				return a.isOpen
+			}
+			catch(err) { throw new Meteor.Error('isFiscalPeriodOpen-fetch-failed', err.message) }
+		}
+	}
+});
+
 export default FiscalPeriod;

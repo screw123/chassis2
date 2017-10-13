@@ -27,3 +27,17 @@ export const roundDollar = (num, decimalPlaces) => {
                 ((i % 2 == 0) ? i : i + 1) : Math.round(n);
     return d ? r / m : r;
 }
+
+export const payTerms = [
+	{term: 'COD', days: 0},
+	{term: 'N07', days: 7},
+	{term: 'N15', days: 15},
+	{term: 'N30', days: 30},
+	{term: 'N60', days: 60}
+]
+
+export const payTerms2Days = (t) => {
+	let a = payTerms.find((v) => { return v['term'] == t })
+	if (a===undefined) { return undefined}
+	else { return a.days}
+}

@@ -27,7 +27,7 @@ export const arapHistorySchema = {
 		}
 	}},
 	latestOutstandingAmt: { type: Number, label: '本幣尚欠金額'},
-
+	relatedJournalBatchId:  {type: Number, label: '相關簿記編號'},
 	supportDoc: { type: String, label: '上傳檔案', regEx: SimpleSchema.RegEx.Url, optional: true},
 
 	userId: {type: String, label: '記錄用戶', regEx: SimpleSchema.RegEx.Id},
@@ -60,7 +60,7 @@ export const arapHistoryView = {
 	'EXAmt': 'currency',
 	'amt': 'currency',
 	'latestOutstandingAmt': 'currency',
-
+	'relatedJournalBatchId': 'integer', 
 	'supportDoc': 'url',
 	'userId': 'user',
 	'userName': 'text',
