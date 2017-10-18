@@ -60,7 +60,7 @@ export const arapHistoryView = {
 	'EXAmt': 'currency',
 	'amt': 'currency',
 	'latestOutstandingAmt': 'currency',
-	'relatedJournalBatchId': 'integer', 
+	'relatedJournalBatchId': 'integer',
 	'supportDoc': 'url',
 	'userId': 'user',
 	'userName': 'text',

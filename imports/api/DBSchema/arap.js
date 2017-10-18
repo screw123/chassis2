@@ -8,6 +8,8 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 
 import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 
+import {roundDollar} from '../helper.js'
+
 const arap = new Mongo.Collection('arap');
 
 export const arapSchema = {
@@ -19,9 +21,6 @@ export const arapSchema = {
 	invoiceDate: {type: Date, label: '帳單日期'},
 	payterm: {type: String, label: '數期', allowedValues: ['COD', 'N07', 'N15', 'N30', 'N60']},
 	payDueDate: {type: Date, label: '到期日期'},
-
-	userId: {type: String, label: '記錄用戶', regEx: SimpleSchema.RegEx.Id},
-	userName: {type: String, label: '記錄用戶名稱'},
 
 	organization: {type: String, label: '記錄所屬公司', min: 1},
 	projectId: { type: String, label: '所屬項目', optional: true, regEx: SimpleSchema.RegEx.Id },
@@ -40,9 +39,10 @@ export const arapSchema = {
 	EXCurrency: { type: String, label: '貨幣', min: 3, max: 3 },
 	EXRate: {type: Number, decimal: true, label: '匯率', min: 0, defaultValue: 1 },
 	EXAmt: { type: Number, decimal: true, label: '外幣金額' },
+	//amt refers to original amt.  outstandingAmt is latest amt.  If outstandingAmt=0, item is fully settled
 	amt: { type: Number, label: '本幣總金額', decimal: true, autoValue: function() {
 		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet)) {
-			return this.field("EXRate").value * this.field("EXAmt").value
+			return roundDollar(this.field("EXRate").value * this.field("EXAmt").value)
 		}
 	}},
 	outstandingAmt: { type: Number, label: '本幣尚欠金額', decimal: true},
@@ -76,10 +76,6 @@ export const arapView = {
 	'invoiceDate': 'date',
 	'payterm': 'text',
 	'payDueDate': 'date',
-
-	'userId': 'user',
-	'userName': 'text',
-	'user': {type: 'autocomplete', key: 'userName', value: 'userId', 'link': { 'q': 'user.list', 'text': "userName", "value": "_id" } },
 
 	'organization': 'foreignList',
 	'projectId': 'sysID',

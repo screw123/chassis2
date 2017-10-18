@@ -8,6 +8,8 @@ import { ValidatedMethod } from 'meteor/mdg:validated-method';
 
 import { CallPromiseMixin } from 'meteor/didericis:callpromise-mixin';
 
+import {roundDollar} from '../helper.js'
+
 const acctJournal = new Mongo.Collection('acct_journal');
 
 export const acctJournalSchema = {
@@ -24,8 +26,8 @@ export const acctJournalSchema = {
 	businessId: { type: String, label: '所屬業務', optional: true, regEx: SimpleSchema.RegEx.Id },
 	businessCode: {type: String, label: '業務名稱', optional: true},
 
-	fiscalPeriodId: { type: String, label: '會計期', regEx: SimpleSchema.RegEx.Id },
-	fiscalPeriodName: { type: String, label: '會計期名稱' },
+	fiscalYear: { type: Number, label: '會計年度' },
+	fiscalPeriod: { type: Number, label: '會計期間' },
 
 	journalType: { type: String, label: '記錄類別', min: 3, max: 3},
 
@@ -45,7 +47,7 @@ export const acctJournalSchema = {
 	EXAmt: { type: Number, decimal: true, label: '外幣金額' },
 	amt: { type: Number, label: '結算金額', decimal: true, autoValue: function() {
 		if ((this.field("EXRate").isSet)&(this.field("EXAmt").isSet)) {
-			return this.field("EXRate").value * this.field("EXAmt").value
+			return roundDollar(this.field("EXRate").value * this.field("EXAmt").value)
 		}
 	}},
 	supportDoc: { type: String, label: '上傳檔案', regEx: SimpleSchema.RegEx.Url, optional: true},
@@ -86,10 +88,8 @@ export const acctJournalView = {
 	'COAsubcat1': 'list',
 	'COAsubcat2': 'text',
 
-	'fiscalPeriodId': 'sysID',
-	'fiscalPeriodName': 'text',
-	'fiscalPeriod': {type: 'autocomplete', key: 'fiscalPeriodName', value: 'fiscalPeriodId', link: { 'q': 'FiscalPeriod.list', 'text': "name", "value": "_id" }},
-
+	'fiscalYear': 'integer',
+	'fiscalPeriod': 'integer',
 	'journalType': 'text',
 	'journalDesc': 'longText',
 	'EXCurrency': 'text',
@@ -101,11 +101,11 @@ export const acctJournalView = {
 };
 
 const publishSpec = [
-	{ 'name': 'acctJournal.ALL', 'filter': {_id: {$ne : 'autoincrement'}}},
-	{ 'name': 'acctJournal.MTDPL', 'filter': { fiscalYear: 'XXX', fiscalPeriod: 'XXX', COAAcctType: 'PL' }},
-	{ 'name': 'acctJournal.YTDPL', 'filter': { fiscalYear: 'XXX', COAAcctType: 'PL' }},
-	{ 'name': 'acctJournal.MTDBS', 'filter': { fiscalYear: 'XXX', fiscalPeriod: 'XXX', COAAcctType: 'BS' }},
-	{ 'name': 'acctJournal.YTDBS', 'filter': { fiscalYear: 'XXX', COAAcctType: 'BS' }}
+	{ 'name': 'acct_journal.ALL', 'filter': {_id: {$ne : 'autoincrement'}}},
+	{ 'name': 'acct_journal.MTDPL', 'filter': { fiscalYear: 'XXX', fiscalPeriod: 'XXX', COAAcctType: 'PL' }},
+	{ 'name': 'acct_journal.YTDPL', 'filter': { fiscalYear: 'XXX', COAAcctType: 'PL' }},
+	{ 'name': 'acct_journal.MTDBS', 'filter': { fiscalYear: 'XXX', fiscalPeriod: 'XXX', COAAcctType: 'BS' }},
+	{ 'name': 'acct_journal.YTDBS', 'filter': { fiscalYear: 'XXX', COAAcctType: 'BS' }}
 ];
 
 const doAutoincrement = (collection, callback) => { collection.rawCollection().findAndModify( { _id: 'autoincrement' }, [], { $inc: { value: 1 } }, { 'new': true }, callback) }

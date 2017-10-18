@@ -34,8 +34,16 @@ export const postARAP = new ValidatedMethod({
 			else { if (this.userId != userId) { throw new Meteor.Error('你的用戶不等於條目的創建用戶') } }
 		} catch(e) { throw new Meteor.Error(e) }
 
-		try { check(organization, String)}
+		try { check(organization, String) }
 		catch(e) { throw new Meteor.Error('請正確填寫所屬公司') }
+
+		//if user=admin or org.length > 0, i.e. user is in that org, then yes test pass, else user is not in that group so return error
+		if Roles.userIsInRole(Meteor.user(this.userId), 'admin', 'SYSTEM') {}
+		else {
+			if (Roles.getGroupsForUser(Meteor.user(this.userId), organization).length == 0) {
+				throw new Meteor.Error('你沒有權限存取公司'+organization)
+			}
+		}
 
 		try { check(projectId, String)}
 		catch(e) { throw new Meteor.Error('請正確填寫項目') }
@@ -45,7 +53,7 @@ export const postARAP = new ValidatedMethod({
 
 		try {
 			check(fiscalPeriodId, String);
-			if Meteor.call('FiscalPeriod.isFiscalPeriodOpen', fiscalPeriodId) {}
+			if (Meteor.call('FiscalPeriod.isFiscalPeriodOpen', fiscalPeriodId)) {}
 			else {throw new Meteor.Error()}
 		}
 		catch(e) { throw new Meteor.Error('請正確填寫會計期') }
@@ -146,11 +154,111 @@ export const postARAP = new ValidatedMethod({
 						userName: a.userName
 					})
 				}
-
-
 				return q2;
 			}
 			catch(err) { throw new Meteor.Error('insert-failed', err.message) }
 		}
+	}
+});
+
+export const settleARAP = new ValidatedMethod({
+	name: 'acct_module.settleARAP',
+	mixins:  [LoggedInMixin, CallPromiseMixin],
+	checkLoggedInError: {
+		error: 'notLoggedIn',
+		message: '用戶未有登入'
+	},
+	validate({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, entries}) {
+		try {
+			check(batchDesc, String);
+			if (batchDesc.length < 5) { throw new Error() }
+		} catch(e) { throw new Meteor.Error('請正確填寫記錄原因') }
+
+		try { check(journalDate, Date) }
+		catch(e) { throw new Meteor.Error('請正確填寫記錄日期') }
+
+		if Roles.userIsInRole(Meteor.user(this.userId), 'admin', 'SYSTEM') {}
+		else {
+			if (Roles.getGroupsForUser(Meteor.user(this.userId), organization).length == 0) {
+				throw new Meteor.Error('你沒有權限存取公司'+organization)
+			}
+		}
+
+		try { check(projectId, String) }
+		catch(e) { throw new Meteor.Error('請正確填寫項目') }
+		try { check(businessId, String) }
+		catch(e) { throw new Meteor.Error('請正確填寫業務') }
+		try { check(fiscalPeriodId, String) }
+		catch(e) { throw new Meteor.Error('請正確填寫會計期') }
+
+		for (a of entries) {
+			check(a, {arapId: Match.Maybe(String), COAId: Match.Maybe(String), EXCurrency: String, EXRate: Number, EXAmt: Number, changeDesc: String, supportDoc: String})
+			if (arapId === undefined)&& (COAId === undefined) { throw new Meteor.Error('錯誤: 一條或多條簿記之應收/付帳或科目未有提供') }
+			if ((EXRate * EXAmt) == 0) { throw new Meteor.Error('錯誤: 一條或多條之金額為0, 所有簿記之金額均不能為0.') }
+		}
+	}
+	run({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, entries}) {
+		//1. check whatever you can check for logics
+
+		//fetch all relevant info
+		const projectCode = tableHandles('project')['main'].findOne({_id: projectId, isActive: true}).code
+		if (projectCode===undefined) { throw new Meteor.Error('錯誤: 項目錯誤') }
+
+		const businessCode = tableHandles('business')['main'].findOne({_id: businessId, isActive: true}).code
+		if (businessCode===undefined) { throw new Meteor.Error('錯誤: 業務錯誤') }
+
+		const fiscalPeriodName = tableHandles('FiscalPeriod')['main'].findOne(fiscalPeriodId).name
+		if (fiscalPeriodName===undefined) { throw new Meteor.Error('錯誤: 會計期錯誤') }
+
+		let u = Meteor.users.findOne(this.userId); //no need to check coz we made sure user is logged in
+		const userName = u.profile.firstName + ' ' + u.profile.lastName;
+
+		if Roles.userIsInRole(u, 'SYSTEM', 'admin') {}
+		else if (Roles.getGroupsForUser(u, organization).length!=1) {
+			throw new Meteor.Error('錯誤: 你沒有權限修改'+organization+' 的記錄.')
+		}
+
+		let gl_entries = [];
+		let arap_adj = [];
+		for (a of entries) {
+			let deductAmtLC = roundDollar(a.EXRate * a.EXAmt)
+			if (arapId != undefined) { //i.e. is AR/AP record, we will ignore COA
+				let arap_doc = tableHandles('arap')['main'].findOne(arapId)
+				if (arap_doc.outstandingAmt+1 < deductAmtLC) { //+1 so as to allow difference in pennies
+					throw new Meteor.Error('錯誤: 應收/付帳餘額少於扣減金額')
+				}
+				arap_adj.push({
+					arapId: arapId,
+					deductAmtLC: deductAmtLC,
+					EXCurrency: a.EXCurrency,
+					EXRate: a.EXRate,
+					EXAmt: a.EXAmt,
+					changeDesc: a.changeDesc,
+					supportDoc: a.supportDoc,
+					COAId: arap_doc.COAId, //fixme now we store existing arap item COA, which is wrong.  We want to store the account that the settlement is done against.  To fix
+				})
+			}
+			else if (COAId != undefined) { //i.e. is the other side of the AR/AP settlement
+
+			}
+			else { //if arapId and COAId both undefined, i.e. error from calling function, throw error
+				throw new Meteor.Error('錯誤: 應收/付帳編號, 科目, 必需最少提供一種')
+			}
+			gl_entries.push({
+				COAId: arap_doc.COAId,
+				journalDesc: a.changeDesc,
+				EXCurrency: a.EXCurrency,
+				EXRate: a.EXRate,
+				EXAmt: a.EXAmt,
+				supportDoc: a.supportDoc,
+				relatedDocType: arap_doc.relatedDocType,
+				relatedDocId: arap_doc.relatedDocId,
+			})
+			}
+		}
+
+
+		//2. book journal first, get batchNo
+		//3. book arap + history row by row
 	}
 });
