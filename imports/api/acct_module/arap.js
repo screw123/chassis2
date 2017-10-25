@@ -168,7 +168,8 @@ export const settleARAP = new ValidatedMethod({
 		error: 'notLoggedIn',
 		message: '用戶未有登入'
 	},
-	validate({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, entries}) {
+	validate({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, userId, entries}) {
+		//entries: {arapId [AR/AP entry in the arap collection.  From here can look up the AR/AP account that store this record], COAId [account id.  Use to book the other side of the AR/AP journal], EXCurrency, EXRate, EXAmt, changeDesc, supportDoc}
 		try {
 			check(batchDesc, String);
 			if (batchDesc.length < 5) { throw new Error() }
@@ -177,10 +178,10 @@ export const settleARAP = new ValidatedMethod({
 		try { check(journalDate, Date) }
 		catch(e) { throw new Meteor.Error('請正確填寫記錄日期') }
 
-		if Roles.userIsInRole(Meteor.user(this.userId), 'admin', 'SYSTEM') {}
-		else {
-			if (Roles.getGroupsForUser(Meteor.user(this.userId), organization).length == 0) {
-				throw new Meteor.Error('你沒有權限存取公司'+organization)
+		if !Roles.userIsInRole(u, 'SYSTEM', 'admin') {
+			if (this.userId != userId) { throw new Meteor.Error('你的用戶不等於條目的創建用戶') }
+			if (Roles.getGroupsForUser(u, organization).length!=1) {
+				throw new Meteor.Error('錯誤: 你沒有權限修改'+organization+' 的記錄.')
 			}
 		}
 
@@ -197,7 +198,7 @@ export const settleARAP = new ValidatedMethod({
 			if ((EXRate * EXAmt) == 0) { throw new Meteor.Error('錯誤: 一條或多條之金額為0, 所有簿記之金額均不能為0.') }
 		}
 	}
-	run({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, entries}) {
+	run({batchDesc, journalDate, organization, projectId, businessId, fiscalPeriodId, userId, entries}) {
 		//1. check whatever you can check for logics
 
 		//fetch all relevant info
@@ -213,52 +214,116 @@ export const settleARAP = new ValidatedMethod({
 		let u = Meteor.users.findOne(this.userId); //no need to check coz we made sure user is logged in
 		const userName = u.profile.firstName + ' ' + u.profile.lastName;
 
-		if Roles.userIsInRole(u, 'SYSTEM', 'admin') {}
-		else if (Roles.getGroupsForUser(u, organization).length!=1) {
-			throw new Meteor.Error('錯誤: 你沒有權限修改'+organization+' 的記錄.')
-		}
-
+		//compile arap deduction and gl entries into 2 separate arrays
 		let gl_entries = [];
 		let arap_adj = [];
+		let partyIdInvolved = '';
+		let orgInvolved = '';
 		for (a of entries) {
 			let deductAmtLC = roundDollar(a.EXRate * a.EXAmt)
 			if (arapId != undefined) { //i.e. is AR/AP record, we will ignore COA
+
 				let arap_doc = tableHandles('arap')['main'].findOne(arapId)
+
+				if (arap_doc===undefined) { //AR/AP entry cannot be found
+					throw new Meteor.Error('錯誤: 應收/付帳無記錄')
+				}
 				if (arap_doc.outstandingAmt+1 < deductAmtLC) { //+1 so as to allow difference in pennies
 					throw new Meteor.Error('錯誤: 應收/付帳餘額少於扣減金額')
 				}
+				if (partyIdInvolved == '') { partyIdInvolved = arap_doc.partyId }
+				else {
+					if (partyIdInvolved != arap_doc.partyId) { //settlement can only be done among same party.  If entries sent in contains AR/AP with more than 1 party, then give error
+						throw new Meteor.Error('錯誤: 應收/付只能於同一團體間消帳')
+					}
+				}
+
+				if (orgInvolved == '') { orgInvolved = arap_doc.organization }
+				else {
+					if (orgInvolved != arap_doc.organization) { //settlement can only be done with same org.  If entries sent in contains AR/AP with more than 1 party, then give error
+						throw new Meteor.Error('錯誤: 應收/付只能於同一公司間消帳')
+					}
+				}
+
+				//entries pointing to AR/AP doc
 				arap_adj.push({
 					arapId: arapId,
 					deductAmtLC: deductAmtLC,
 					EXCurrency: a.EXCurrency,
 					EXRate: a.EXRate,
 					EXAmt: a.EXAmt,
+					amt: deductAmtLC,
 					changeDesc: a.changeDesc,
 					supportDoc: a.supportDoc,
 					COAId: arap_doc.COAId, //fixme now we store existing arap item COA, which is wrong.  We want to store the account that the settlement is done against.  To fix
+					COADesc: arap_doc.COADesc,
+					latestOutstandingAmt: arap_doc.outstandingAmt - deductAmtLC
+				})
+				gl_entries.push({
+					COAId: arap_doc.COAId, //because the account used is store in the AR/AP doc
+					journalDesc: a.changeDesc,
+					EXCurrency: a.EXCurrency,
+					EXRate: a.EXRate,
+					EXAmt: a.EXAmt,
+					supportDoc: a.supportDoc,
+					relatedDocType: arap_doc.relatedDocType,
+					relatedDocId: arap_doc.relatedDocId,
 				})
 			}
 			else if (COAId != undefined) { //i.e. is the other side of the AR/AP settlement
-
+				gl_entries.push({
+					COAId: a.COAId,
+					journalDesc: a.changeDesc,
+					EXCurrency: a.EXCurrency,
+					EXRate: a.EXRate,
+					EXAmt: a.EXAmt,
+					supportDoc: a.supportDoc,
+					relatedDocType: arap_doc.relatedDocType,
+					relatedDocId: arap_doc.relatedDocId
+				})
 			}
 			else { //if arapId and COAId both undefined, i.e. error from calling function, throw error
 				throw new Meteor.Error('錯誤: 應收/付帳編號, 科目, 必需最少提供一種')
 			}
-			gl_entries.push({
-				COAId: arap_doc.COAId,
-				journalDesc: a.changeDesc,
+		}
+
+		//2. book journal first, get batchNo
+		let batchNo = Meteor.call('acct_module.postNewJournal', {
+			batchDesc: 'AR/AP settlement: '+ arap_doc.partyName
+			journalDate: new Date(),
+			userId: userId,
+			organization: arap_doc.organization,
+			projectId: projectId,
+			businessId: businessId,
+			journalType: 'NOR',
+			fiscalPeriodId: fiscalPeriodId,
+			entries: gl_entries
+		});
+
+		if (batchNo===undefined) { throw new Meteor.Error('錯誤: GL未能正確記錄') }
+
+		//3. book arap + history row by row
+
+		for (a of arap_adj) {
+			let t1 = Meteor.call('arapHistory.new', {
+				arapId: a.arapId,
+				COAId: a.COAId,
+				COADesc: a.COADesc,
+				changeDesc: a.changeDesc,
 				EXCurrency: a.EXCurrency,
 				EXRate: a.EXRate,
 				EXAmt: a.EXAmt,
+				latestOutstandingAmt: a.latestOutstandingAmt,
+				relatedJournalBatchId:  batchNo,
 				supportDoc: a.supportDoc,
-				relatedDocType: arap_doc.relatedDocType,
-				relatedDocId: arap_doc.relatedDocId,
+				userId: userId,
+				userName: userName
 			})
-			}
+			let t2 = Meteor.call('arap.update', {filter: {_id: a.arapId}, args: {
+				outstandingAmt: a.latestOutstandingAmt
+			}})
 		}
 
-
-		//2. book journal first, get batchNo
-		//3. book arap + history row by row
+		return '更新了'+arap_adj.length+'張文件'
 	}
 });
